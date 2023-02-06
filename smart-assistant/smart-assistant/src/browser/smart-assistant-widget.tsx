@@ -407,7 +407,7 @@ export class SmartAssistantWidget extends ReactWidget {
         var table = '', rows = '', th = '';
         th = "<tr><th>Urls</th></tr>"
         for (var item of res.items) {
-          if (item.description !== '' && item.description.match(/^[a-zA-Z1-9.?!:;\- ]+$/g) !== null) {
+          if (item.description !== null && item.description.match(/^[a-zA-Z1-9.?!:;\- ]+$/g) !== null) {
             rows += "<tr>" +
               "<td><a href='" + item.html_url + "' target='_blank' >" + item.full_name + "</a></td>" +
               "<td>" + item.description + "</td>" +
