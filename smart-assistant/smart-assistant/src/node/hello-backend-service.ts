@@ -18,7 +18,7 @@ import * as Configurations from '../browser/configuration';
 export class HelloBackendServiceImpl implements HelloBackendService {
 
     static cluster_endpoint = {
-        host: Configurations.SMARTCLIDE_URL,
+        host: Configurations.SMARTCLIDE_HOST,
         port: Configurations.SMARTCLIDE_PORT
     };
     static functinality_path = {
@@ -49,9 +49,6 @@ export class HelloBackendServiceImpl implements HelloBackendService {
             console.log(e)
         }
         var template_dir = path.join(__dirname, '../../src/node/template/');
-        console.log(template_dir)
-
-        // var template_dir = userHomeDir + '/template';
         return template_dir;
     }
 

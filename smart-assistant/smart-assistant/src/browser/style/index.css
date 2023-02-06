@@ -332,9 +332,13 @@ input {
 
 .btn-submit {
   color: #aaa;
+  cursor: pointer;
   background-color: #3c3c3c;
 }
-
+/* Change background color of buttons on hover */
+.btn-submit:hover {
+  background-color:  #535252;
+}
 
 /* waiting animation */
 .lds-dual-ring {

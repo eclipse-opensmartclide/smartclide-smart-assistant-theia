@@ -7,11 +7,9 @@
  * 
  * SPDX-License-Identifier: EPL-2.0
  ******************************************************************************/
-import * as React from "react";
 import { ChangeEvent, useState } from 'react';
 
 function FileUploadSingle() {
-  console.log(React)
   const [file, setFile] = useState<File>();
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -38,18 +36,3 @@ function FileUploadSingle() {
 }
 
 export default FileUploadSingle;
-
-
-
-// retrieveDeployedServices(){
-//   //ToDO : statisc services exported from DB
-//   var i: any = 0
-//   for (i in Services) {
-//     if (Services[i].deployable) {
-//       this.deployed_services.push({
-//         label: Services[i].name,
-//         value: Services[i].git_credentials_id,
-//       });
-//     }
-//   }
-// }

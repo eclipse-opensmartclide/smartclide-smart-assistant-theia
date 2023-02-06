@@ -40,7 +40,7 @@ export class SmartAssistantWidget extends ReactWidget {
   static readonly ID = "smart-assistant:widget";
   static readonly LABEL = "SmartAssistant Widget";
   static cluster_endpoint = {
-    host: Configurations.SMARTCLIDE_URL,
+    host: Configurations.SMARTCLIDE_HOST,
     port: Configurations.SMARTCLIDE_PORT
   };
   static functinality_path = {
@@ -140,7 +140,6 @@ export class SmartAssistantWidget extends ReactWidget {
     //Template generation using API
     const handleUploadClick = () => {
       const result = XMLValidator.validate(SmartAssistantWidget.state["file"]);
-      // console.log(result)
       if (result === true) {
         //read file in backend
         this.runprocess(SmartAssistantWidget.state["file"]);
@@ -521,7 +520,7 @@ export class SmartAssistantWidget extends ReactWidget {
   }
 
   protected displayMessage(): void {
-    console.log(SmartAssistantWidget.state.stateKeycloakToken)
+    // console.log(SmartAssistantWidget.state.stateKeycloakToken)
   }
 
   protected onActivateRequest(msg: Message): void {

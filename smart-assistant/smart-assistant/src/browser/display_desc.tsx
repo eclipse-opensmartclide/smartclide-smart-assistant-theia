@@ -1,4 +1,3 @@
-
 /*******************************************************************************
  * Copyright (C) 2021-2022 AIR Institute
  * 
@@ -8,11 +7,8 @@
  * 
  * SPDX-License-Identifier: EPL-2.0
  ******************************************************************************/
-import * as React from 'react';
-
 
 function DiaplayWidgetDesc(module: string) {
-  console.log(React)
   var widgetInfo =
   {
     name: "Smart Assistant",

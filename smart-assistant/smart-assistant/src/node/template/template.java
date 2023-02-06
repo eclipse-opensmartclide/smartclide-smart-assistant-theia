@@ -4,16 +4,8 @@ public class GeneratedClass {
         //TODO: request user "handleMedicalCommitteeResults"
     }
 
-    public String taskAssignment(String url,String username,String connecttimeout,String contentdata,String method,String password,String readtimeout, handleresponseerrors, resultclass,Object taskname){
-        //TODO: complete method
-    }
-
     public Object medicalCommitteeResultsTerminated( signal1Input){
         //TODO
-    }
-
-    public String reviewMedicalCommitteeResults(Object taskname,java.lang.Long id,String isapproved,String correspondencestate,String businessadministratorid,Object skippable){
-        //TODO: request user "reviewMedicalCommitteeResults"
     }
 
     public Object medicalCommitteeResults(){
@@ -22,6 +14,14 @@ public class GeneratedClass {
 
     public String taskAssignment(String url,String username,String connecttimeout,String contentdata,String method,String password,String readtimeout, handleresponseerrors, resultclass,Object taskname){
         //TODO: complete method
+    }
+
+    public String taskAssignment(String url,String username,String connecttimeout,String contentdata,String method,String password,String readtimeout, handleresponseerrors, resultclass,Object taskname){
+        //TODO: complete method
+    }
+
+    public String reviewMedicalCommitteeResults(Object taskname,java.lang.Long id,String isapproved,String correspondencestate,String businessadministratorid,Object skippable){
+        //TODO: request user "reviewMedicalCommitteeResults"
     }
 
     public void run(){
