@@ -16,6 +16,7 @@ export interface HelloBackendService {
     sayHelloTo(name: string): Promise<string>;
     runAcceptance(name: string): Promise<string>;
     callSearch(name: string): Promise<any[]>;
+    gettemplafile_path(): string;
 }
 export const HelloBackendWithClientService = Symbol('BackendWithClient');
 export const HELLO_BACKEND_WITH_CLIENT_PATH = '/services/withClient';

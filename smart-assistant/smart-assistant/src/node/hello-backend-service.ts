@@ -48,25 +48,36 @@ export class HelloBackendServiceImpl implements HelloBackendService {
         } catch (e) {
             console.log(e)
         }
+        var template_dir = path.join(__dirname, '../../src/node/template/');
+        console.log(template_dir)
 
-        var template_dir = userHomeDir + '/template';
+        // var template_dir = userHomeDir + '/template';
         return template_dir;
     }
-    public static getacceptancedir_path() {
-        const fs = require('fs');
+
+    gettemplafile_path() {
         const path = require('path');
-        const userHomeDir = HelloBackendServiceImpl.gethomedir_path();
+        var filename ='';
         try {
-            fs.mkdir(path.join(userHomeDir, 'acceptance'), (err: any) => {
-                console.log('Acceptance Directory created successfully!');
-            });
+            var template_dir = path.join(__dirname, '../../src/node/template/');
+            filename = template_dir + '/' + HelloBackendServiceImpl.gettemplatefile_name();
         } catch (e) {
             console.log(e)
         }
+        return filename;
+    }
+    public static getacceptancedir_path() {
 
-        var acceptance_dir = userHomeDir + '/acceptance';
-        console.log(acceptance_dir)
-        return acceptance_dir;
+        const path_ = require('path');
+        var filename ='';
+        try {
+            var template_dir = path_.join(__dirname, '../../src/node/acceptance/');
+            filename = template_dir + '/' + HelloBackendServiceImpl.gettemplatefile_name();
+        } catch (e) {
+            console.log(e)
+        }
+        return filename;
+
     }
 
     callSearch(content: string): Promise<any[]> {
@@ -86,10 +97,7 @@ export class HelloBackendServiceImpl implements HelloBackendService {
 
     runAcceptance(content: string): Promise<string> {
         var fs = require("fs");
-        var fs = require("fs");
-        var acceptance_dir = HelloBackendServiceImpl.gettemplatedir_path();
-
-        var acceptance_dir = HelloBackendServiceImpl.gettemplatedir_path();
+        var acceptance_dir = HelloBackendServiceImpl.getacceptancedir_path();
         let filename = acceptance_dir + "/acceptance.java";
         fs.writeFileSync(filename, content);
         var request = require('request');

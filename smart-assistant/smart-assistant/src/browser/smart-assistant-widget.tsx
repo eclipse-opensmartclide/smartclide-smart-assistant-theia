@@ -352,11 +352,10 @@ export class SmartAssistantWidget extends ReactWidget {
     return this.deployed_services;
   }
 
-  public creatEditor() {
+  public async creatEditor() {
     var u = new URI()
-    var template_dir = Configurations.TEMPLATE_DIR;
-    let filename = template_dir + "/template.java";
-    console.log(filename)
+    var filename = await this.helloBackendService.gettemplafile_path()
+
     var new_u = u.withPath(filename);
     if (new_u) {
       this.editorManager.open(new_u);

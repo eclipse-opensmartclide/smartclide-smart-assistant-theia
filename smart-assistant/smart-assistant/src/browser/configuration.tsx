@@ -8,8 +8,8 @@
  * SPDX-License-Identifier: EPL-2.0
  ******************************************************************************/
 
- export const HOME_DIR  ='/home/zakieh/';
- export const TEMPLATE_DIR  = "/home/zakieh/template";
+ export const HOME_DIR  ='';
+ export const TEMPLATE_DIR  = "";
 export const SMARTCLIDE_URL = "http://vm-bisite-57.der.usal.es";
 export const SMARTCLIDE_TARGET_MODULE_PATH = "/smartclide/v1/iamodeler";
 export const SMARTCLIDE_PORT = '5001';
