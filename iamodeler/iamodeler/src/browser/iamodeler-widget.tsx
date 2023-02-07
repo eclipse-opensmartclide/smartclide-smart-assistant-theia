@@ -9,7 +9,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { ReactWidget } from '@theia/core/lib/browser/widgets/react-widget';
 import { AlertMessage } from '@theia/core/lib/browser/widgets/alert-message';
 import { injectable, postConstruct, inject } from '@theia/core/shared/inversify';
-
+import { messageTypes, buildMessage } from '@unparallel/smartclide-frontend-comm';
 
 
 @injectable()
@@ -43,6 +43,7 @@ export class IamodelerWidget extends ReactWidget {
     cluster_method: "",
     cluster_target: "",
     cluster_label_number: "",
+    stateKeycloakToken: ''
   };
   model_uuid = ''
   NUMBER_VALIDATOR = /^[0-9]+$/;
@@ -54,6 +55,21 @@ export class IamodelerWidget extends ReactWidget {
   @inject(MessageService)
   protected readonly messageService!: MessageService;
 
+  handleTokenInfo = ({ data }: any) => {
+    switch (data.type) {
+      case messageTypes.TOKEN_INFO:
+        console.log("Smartassistant: RECEIVED", JSON.stringify(data, undefined, 4));
+        IamodelerWidget.state.stateKeycloakToken = data.content;
+        break;
+      case messageTypes.TOKEN_REVOKE:
+        console.log("Smartassistant: RECEIVED", JSON.stringify(data, undefined, 4));
+        window.removeEventListener("message", this.handleTokenInfo);
+        break;
+      default:
+        break;
+    }
+  }
+
   @postConstruct()
   protected async init(): Promise<void> {
     this.id = IamodelerWidget.ID;
@@ -62,6 +78,17 @@ export class IamodelerWidget extends ReactWidget {
     this.title.closable = true;
     this.title.iconClass = 'fa fa-window-maximize'; // example widget icon.
     this.update();
+
+    //Add event listener to get the Keycloak Token
+    window.addEventListener("message", this.handleTokenInfo);
+
+    //Send a message to inform SmartCLIDE IDE
+    let message = buildMessage(messageTypes.COMPONENT_HELLO);
+    window.parent.postMessage(message, "*");
+  }
+  protected onAfterDetach(msg: Message): void {
+    window.removeEventListener("message", this.handleTokenInfo);
+    super.onAfterDetach(msg);
   }
 
   render(): React.ReactElement {
@@ -215,9 +242,9 @@ export class IamodelerWidget extends ReactWidget {
               <input id="size" name="classifier_size" onChange={this.updateInput} placeholder="0.2" />
             </fieldset>
 
-            <button onClick={() => this.classify()}  className='button-model-large'>
-                Submit <span id='waitAnimation' className="lds-dual-ring" ></span>
-              </button>
+            <button onClick={() => this.classify()} className='button-model-large'>
+              Submit <span id='waitAnimation' className="lds-dual-ring" ></span>
+            </button>
 
             {/* <input type="submit" value="Submit" onClick={() => this.classify()}>
             <span id='waitAnimation' className="lds-dual-ring"></span>
@@ -262,10 +289,10 @@ export class IamodelerWidget extends ReactWidget {
     if (!this.validator(IamodelerWidget.state["classifier_size"], 'number') || Number(IamodelerWidget.state["classifier_size"]) < 0 || Number(IamodelerWidget.state["classifier_size"]) > 1) {
       err_msg.push("Training and Testing: must be float number between 0-1")
     }
-    if (IamodelerWidget.state["classifier_name"] === '' ) {
-      IamodelerWidget.state["classifier_name"] = 'classifer_model_'+ this.getRandomInt(1,100000)
-      console.log( IamodelerWidget.state["classifier_name"])
-    }else if  ( !this.validator(IamodelerWidget.state["classifier_name"], 'string')){
+    if (IamodelerWidget.state["classifier_name"] === '') {
+      IamodelerWidget.state["classifier_name"] = 'classifer_model_' + this.getRandomInt(1, 100000)
+      console.log(IamodelerWidget.state["classifier_name"])
+    } else if (!this.validator(IamodelerWidget.state["classifier_name"], 'string')) {
       err_msg.push("Classifier Name: Allowed string characters includes [0-9a-zA-Z_-]  between 0-200")
 
     }
@@ -299,9 +326,10 @@ export class IamodelerWidget extends ReactWidget {
     myHeaders.append("accept", "application/json");
     myHeaders.append("Content-Type", "application/json");
     if (Configurations.AUTHORIZATION_REQUIRED) {
-      myHeaders.append("Authorization", "Bearer " + this.getAuthToken());
+      myHeaders.append("Authorization", "Bearer " + IamodelerWidget.state.stateKeycloakToken);
     }
 
+    
     var raw = JSON.stringify({
       "model-id": IamodelerWidget.state["model_id"],
       "source": {
@@ -375,8 +403,8 @@ export class IamodelerWidget extends ReactWidget {
       })
       .catch((error: any) => console.log('error', error));
 
-      //remove animate
-      (document.getElementById("waitAnimation") as HTMLElement).style.display = "none";
+    //remove animate
+    (document.getElementById("waitAnimation") as HTMLElement).style.display = "none";
   }
 
 
@@ -456,7 +484,7 @@ export class IamodelerWidget extends ReactWidget {
       var myHeaders = new Headers();
       myHeaders.append("accept", "application/json");
       if (Configurations.AUTHORIZATION_REQUIRED) {
-        myHeaders.append("Authorization", "Bearer " + this.getAuthToken());
+        myHeaders.append("Authorization", "Bearer " + IamodelerWidget.state.stateKeycloakToken);
       }
 
       fetch(this.getHostURI() + "/" + path + "/" + model_uuid, {
@@ -482,7 +510,7 @@ export class IamodelerWidget extends ReactWidget {
       var myHeaders = new Headers();
       myHeaders.append("accept", "application/json");
       if (Configurations.AUTHORIZATION_REQUIRED) {
-        myHeaders.append("Authorization", "Bearer " + this.getAuthToken());
+        myHeaders.append("Authorization", "Bearer " + IamodelerWidget.state.stateKeycloakToken);
       }
 
       fetch(this.getHostURI() + "/supervised/" + model_uuid + "/export", {
@@ -560,9 +588,9 @@ export class IamodelerWidget extends ReactWidget {
             </div>
             <input id="size" name="regressor_size" onChange={this.updateInput} />
           </fieldset>
-          <button onClick={() => this.regressoion()}  className='button-model-large'>
-                Submit <span id='waitAnimation' className="lds-dual-ring" ></span>
-              </button>
+          <button onClick={() => this.regressoion()} className='button-model-large'>
+            Submit <span id='waitAnimation' className="lds-dual-ring" ></span>
+          </button>
 
 
           {/* <input type="submit" value="Submit" onClick={() => this.regressoion()}></input> */}
@@ -581,9 +609,9 @@ export class IamodelerWidget extends ReactWidget {
     if (!this.validator(IamodelerWidget.state["regressor_size"], 'number') || Number(IamodelerWidget.state["regressor_size"]) < 0 || Number(IamodelerWidget.state["regressor_size"]) > 1) {
       err_msg.push("Training and Testing: must be float number between 0-1")
     }
-    if (IamodelerWidget.state["regressor_name"] === '' ) {
-      IamodelerWidget.state["regressor_name"] = 'regressor_model_'+ this.getRandomInt(1,100000)
-    }else if  ( !this.validator(IamodelerWidget.state["regressor_name"], 'string')){
+    if (IamodelerWidget.state["regressor_name"] === '') {
+      IamodelerWidget.state["regressor_name"] = 'regressor_model_' + this.getRandomInt(1, 100000)
+    } else if (!this.validator(IamodelerWidget.state["regressor_name"], 'string')) {
       err_msg.push("Regressor Name: Allowed string characters includes [0-9a-zA-Z_-]  between 0-200")
 
     }
@@ -619,7 +647,7 @@ export class IamodelerWidget extends ReactWidget {
     myHeaders.append("Content-Type", "application/json");
 
     if (Configurations.AUTHORIZATION_REQUIRED) {
-      myHeaders.append("Authorization", "Bearer " + this.getAuthToken());
+      myHeaders.append("Authorization", "Bearer " + IamodelerWidget.state.stateKeycloakToken);
     }
 
     var raw = JSON.stringify({
@@ -736,10 +764,10 @@ export class IamodelerWidget extends ReactWidget {
             <input id="cluster_label_number" name="cluster_label_number" onChange={this.updateInput} />
           </fieldset>
           {/* <input type="submit" value="Submit" onClick={() => this.cluster()}></input> */}
-          <button onClick={() => this.classify()}  className='button-model-large'>
-             Submit <span id='waitAnimation' className="lds-dual-ring" ></span>
-              </button>
-          
+          <button onClick={() => this.classify()} className='button-model-large'>
+            Submit <span id='waitAnimation' className="lds-dual-ring" ></span>
+          </button>
+
           <div className="hidden cluster-after-buttons">
             <input value="Dlete model" id='cluster_delete' onClick={() => this.deleteModel(IamodelerWidget.state["model_id"], 'cluster')} type="submit" className='button-model' />
             {/* <input value="Download model" onClick={() => this.downloadModel(IamodelerWidget.state["model_id"])} type="submit" className='button-model' /> */}
@@ -753,9 +781,9 @@ export class IamodelerWidget extends ReactWidget {
 
     var err_msg = []
     ////Input validation
-    if (IamodelerWidget.state["cluster_name"] === '' ) {
-      IamodelerWidget.state["cluster_name"] = 'cluster_model_'+ this.getRandomInt(1,100000)
-    }else if  ( !this.validator(IamodelerWidget.state["cluster_name"], 'string')){
+    if (IamodelerWidget.state["cluster_name"] === '') {
+      IamodelerWidget.state["cluster_name"] = 'cluster_model_' + this.getRandomInt(1, 100000)
+    } else if (!this.validator(IamodelerWidget.state["cluster_name"], 'string')) {
       err_msg.push("Classifier Name: Allowed string characters includes [0-9a-zA-Z_-]  between 0-200")
     }
 
@@ -792,7 +820,7 @@ export class IamodelerWidget extends ReactWidget {
     myHeaders.append("Content-Type", "application/json");
 
     if (Configurations.AUTHORIZATION_REQUIRED) {
-      myHeaders.append("Authorization", "Bearer " + this.getAuthToken());
+      myHeaders.append("Authorization", "Bearer " + IamodelerWidget.state.stateKeycloakToken);
     }
 
     var raw = JSON.stringify({
@@ -1018,11 +1046,11 @@ export class IamodelerWidget extends ReactWidget {
     return true;
   }
 
-  getRandomInt(min:number, max:number) {
+  getRandomInt(min: number, max: number) {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min) + min); // The maximum is exclusive and the minimum is inclusive
   }
-  
+
 
 }

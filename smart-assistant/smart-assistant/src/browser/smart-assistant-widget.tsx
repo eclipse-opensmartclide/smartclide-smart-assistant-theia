@@ -434,6 +434,8 @@ export class SmartAssistantWidget extends ReactWidget {
           Accept: "*/*",
           "Access-Control-Allow-Origin": "*",
           "Content-Type": "application/json",
+          "Authorization": "Bearer " + SmartAssistantWidget.state.stateKeycloakToken
+
         },
         body: JSON.stringify({
           "bpmn": file_content

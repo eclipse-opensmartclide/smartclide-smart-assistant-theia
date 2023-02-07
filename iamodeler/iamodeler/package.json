@@ -10,7 +10,8 @@
   ],
   "dependencies": {
     "@theia/core": "latest",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "@unparallel/smartclide-frontend-comm": "latest"
   },
   "devDependencies": {
     "@testing-library/react": "^11.2.7",
