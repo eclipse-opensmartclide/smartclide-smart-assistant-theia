@@ -239,7 +239,7 @@ export class SmartAssistantWidget extends ReactWidget {
         <div id="enviroment_suggestion" className="tabcontent">
           <AlertMessage type="INFO" header="Enviroment Suggestion" />
           <p>
-            Select a target service in order get the environment suggestions:
+            Select a target service in order get the environment suggestions:<b>Under Develope</b>
           </p>
           <Form.Control
             as="select"
@@ -394,7 +394,6 @@ export class SmartAssistantWidget extends ReactWidget {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     };
-    // var res = await fetch('https://api.github.com/search/repositories?q=' + SmartAssistantWidget.state["search_repo"] + '&per_page=30&page=1&type=registrypackages', requestOptions);
 
     fetch('https://api.github.com/search/repositories?q=' + SmartAssistantWidget.state["search_repo"] + '&per_page=30&page=1&type=registrypackages', requestOptions)
       .then(response => {
@@ -504,15 +503,20 @@ export class SmartAssistantWidget extends ReactWidget {
     )
       .then((res) => res.json())
       .then((out) => {
-        var obj = JSON.parse(JSON.stringify(out));
-        var func_result: any;
-        let sugg = new Resourcesuggestion(obj);
 
-        func_result = sugg.getSuggestions();
-        (document.getElementById("result_") as HTMLElement).innerHTML =
-          func_result;
-        (document.getElementById("result_") as HTMLElement).style.display =
-          "block";
+        //get result
+        if (out.statusCode === "400" || out.statusCode === "500")   {
+          this.messageService.error(out.status);
+        } else {
+          var obj = JSON.parse(JSON.stringify(out));
+          var func_result: any;
+          let sugg = new Resourcesuggestion(obj);
+
+          func_result = sugg.getSuggestions();
+          (document.getElementById("result_") as HTMLElement).innerHTML = func_result;
+          (document.getElementById("result_") as HTMLElement).style.display = "block";
+        }
+
       })
       .catch((err) => {
         console.log("err: ", err);
@@ -592,4 +596,9 @@ export class SmartAssistantWidget extends ReactWidget {
     (document.getElementById(menuItem) as HTMLElement).style.display = "block";
 
   }
+
+
+
 }
+
+
