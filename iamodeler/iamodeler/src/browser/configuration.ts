@@ -5,7 +5,7 @@
 // export const API_HTTP_METHODE_POST = 'POST';
 // export const AUTHORIZATION_REQUIRED = true;
 // export const DLE_IAMODELER_ = false;
-// export const AUTHORIZATION_TOKEN = '';
+export const AUTHORIZATION_TOKEN = '';
 
 
 

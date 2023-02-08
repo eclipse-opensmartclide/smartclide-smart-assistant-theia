@@ -20,7 +20,7 @@ export class IamodelerWidget extends ReactWidget {
 
   smartCLIDETargetHost: string = Configurations.SMARTCLIDE_URL;
   smartCLIDETargetPort: string = Configurations.SMARTCLIDE_PORT;
-  AUTHORIZATION_TOKEN: string = Configurations.AUTHORIZATION_TOKEN;
+  // AUTHORIZATION_TOKEN: string = Configurations.AUTHORIZATION_TOKEN;
   smartCLIDETargetmodule: string = Configurations.SMARTCLIDE_TARGET_MODULE_PATH;
 
   static state = {
@@ -166,9 +166,9 @@ export class IamodelerWidget extends ReactWidget {
   }
 
 
-  getAuthToken(): string {
-    return this.AUTHORIZATION_TOKEN;
-  }
+  // getAuthToken(): string {
+  //   return this.AUTHORIZATION_TOKEN;
+  // }
 
   protected displayMessage(): void {
     this.messageService.info('Congratulations: Iamodeler Widget Successfully Created!');
