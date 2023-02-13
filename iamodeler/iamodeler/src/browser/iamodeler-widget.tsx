@@ -1,3 +1,12 @@
+/*******************************************************************************
+ * Copyright (C) 2021-2022 AIR Institute
+ * 
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
+ * 
+ * SPDX-License-Identifier: EPL-2.0
+ ******************************************************************************/
 import * as React from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import ModelsInfo from "./models_info";
