@@ -24,22 +24,15 @@ export function activate(context: vscode.ExtensionContext) {
 			const linePrefix = document
 				.lineAt(position)
 				.text.substr(0, position.character);
-			// console.log('linePrefix: ', linePrefix);
-			// a simple completion item which inserts `Hello World!`
-
 
 			if (!linePrefix.startsWith("import") && linePrefix.includes('http')) {
 				if (linePrefix.endsWith(".")) {
 					//Search Discovered URLs from OSS repos
-					// eslint-disable-next-line @typescript-eslint/no-var-requires
 					const path = require('path');
 					const file_t = path.join(__dirname, '../src/data/data.txt');
-					// eslint-disable-next-line @typescript-eslint/no-var-requires
 					const fs = require('fs');
-					// var file_t = '/home/zakieh/Desktop/00_Theia___different/code_repo_ext/theia_ext_enviroment/plugin/autocomplete-code/src/data/data.txt'
 					const items = fs.readFileSync(file_t).toString().split("\n");
 					let suggested_url = [];
-					// find all strings in array containing 'user http adress query'
 					//extract http from user query
 					const regex = /https/g;
 					const http_start = linePrefix.search(regex);
@@ -85,6 +78,6 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 			return completionItems;
 		}
-	});
+	}, '.');// Add triggerCharacter
 	context.subscriptions.push(provider1);
 }
