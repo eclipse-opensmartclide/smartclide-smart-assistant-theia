@@ -24,7 +24,6 @@ export function activate(context: vscode.ExtensionContext) {
 			const linePrefix = document
 				.lineAt(position)
 				.text.substr(0, position.character);
-
 			if (!linePrefix.startsWith("import") && linePrefix.includes('http')) {
 				if (linePrefix.endsWith(".")) {
 					//Search Discovered URLs from OSS repos
@@ -69,15 +68,17 @@ export function activate(context: vscode.ExtensionContext) {
 			const suggested_codel_lines = await AICompletionOBJ.getSuggestions(linePrefix);
 
 			const completionItems: vscode.CompletionItem[] = [];
-			for (let i = 0; i < suggested_codel_lines.length; i++) {
-				const sugg_code = suggested_codel_lines[i];
-				const codeCompletion = new vscode.CompletionItem(
-					sugg_code
-				);
-				completionItems.push(codeCompletion);
+			if (linePrefix.endsWith(".")) {
+				for (let i = 0; i < suggested_codel_lines.length; i++) {
+					const sugg_code = suggested_codel_lines[i].replace(linePrefix, "").replace(" ;", ";");
+					const codeCompletion = new vscode.CompletionItem(
+						sugg_code
+					);
+					completionItems.push(codeCompletion);
+				}
 			}
 			return completionItems;
 		}
-	}, '.');// Add triggerCharacter
+	}, ".");
 	context.subscriptions.push(provider1);
 }
