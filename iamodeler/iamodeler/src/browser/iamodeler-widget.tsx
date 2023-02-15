@@ -66,11 +66,11 @@ export class IamodelerWidget extends ReactWidget {
 
   handleTokenInfo = ({ data }: any) => {
     switch (data.type) {
-      case messageTypes.TOKEN_INFO:
+      case messageTypes.KEYCLOAK_TOKEN:
         console.log("Smartassistant: RECEIVED", JSON.stringify(data, undefined, 4));
         IamodelerWidget.state.stateKeycloakToken = data.content;
         break;
-      case messageTypes.TOKEN_REVOKE:
+      case messageTypes.KEYCLOAK_TOKEN:
         console.log("Smartassistant: RECEIVED", JSON.stringify(data, undefined, 4));
         window.removeEventListener("message", this.handleTokenInfo);
         break;
@@ -92,7 +92,7 @@ export class IamodelerWidget extends ReactWidget {
     window.addEventListener("message", this.handleTokenInfo);
 
     //Send a message to inform SmartCLIDE IDE
-    let message = buildMessage(messageTypes.COMPONENT_HELLO);
+    let message = buildMessage(messageTypes.COMM_START);
     window.parent.postMessage(message, "*");
   }
   protected onAfterDetach(msg: Message): void {

@@ -25,5 +25,3 @@ export const SMARTCLIDE_PORT = '';
 export const API_HTTP_METHODE_POST = 'POST';
 export const AUTHORIZATION_REQUIRED = true;
 
-
-
