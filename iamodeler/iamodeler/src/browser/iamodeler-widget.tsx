@@ -785,7 +785,7 @@ export class IamodelerWidget extends ReactWidget {
             <input id="cluster_label_number" name="cluster_label_number" onChange={this.updateInput} />
           </fieldset>
           {/* <input type="submit" value="Submit" onClick={() => this.cluster()}></input> */}
-          <button onClick={() => this.classify()} className='button-model-large'>
+          <button onClick={() => this.cluster()} className='button-model-large'>
             Submit <span id='waitAnimation' className="lds-dual-ring" ></span>
           </button>
 
