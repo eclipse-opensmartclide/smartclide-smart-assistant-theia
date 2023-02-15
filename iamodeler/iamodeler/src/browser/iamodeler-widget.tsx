@@ -52,7 +52,8 @@ export class IamodelerWidget extends ReactWidget {
     cluster_method: "",
     cluster_target: "",
     cluster_label_number: "",
-    stateKeycloakToken: ''
+    stateKeycloakToken: '',
+    stateUSERID:''
   };
   model_uuid = ''
   NUMBER_VALIDATOR = /^[0-9]+$/;
@@ -64,20 +65,26 @@ export class IamodelerWidget extends ReactWidget {
   @inject(MessageService)
   protected readonly messageService!: MessageService;
 
-  handleTokenInfo = ({ data }: any) => {
-    switch (data.type) {
-      case messageTypes.KEYCLOAK_TOKEN:
-        console.log("Smartassistant: RECEIVED", JSON.stringify(data, undefined, 4));
-        IamodelerWidget.state.stateKeycloakToken = data.content;
-        break;
-      case messageTypes.KEYCLOAK_TOKEN:
-        console.log("Smartassistant: RECEIVED", JSON.stringify(data, undefined, 4));
-        window.removeEventListener("message", this.handleTokenInfo);
-        break;
-      default:
-        break;
-    }
-  }
+  //Handle KEYCLOAK_TOKEN message from parent
+	handleTokenInfo = ({data}:any) => {
+		switch (data.type) {
+		  case messageTypes.KEYCLOAK_TOKEN:
+			console.log("AIModeler: RECEIVED", JSON.stringify(data, undefined, 4));
+			IamodelerWidget.state.stateKeycloakToken = data.content.token;
+			break;
+		  case messageTypes.COMM_END:
+			console.log("AIModeler: RECEIVED", JSON.stringify(data, undefined, 4));
+			window.removeEventListener("message", this.handleTokenInfo);
+			break;
+		  case messageTypes.COMM_START_REPLY:
+			console.log("AIModeler: RECEIVED", JSON.stringify(data, undefined, 4));
+			IamodelerWidget.state.stateKeycloakToken = data.content.token;
+      // IamodelerWidget.state.stateUSERID = data.content.userID;
+			break;
+		  default:
+			break;
+		}
+	}
 
   @postConstruct()
   protected async init(): Promise<void> {
@@ -88,12 +95,18 @@ export class IamodelerWidget extends ReactWidget {
     this.title.iconClass = 'fa fa-window-maximize'; // example widget icon.
     this.update();
 
-    //Add event listener to get the Keycloak Token
-    window.addEventListener("message", this.handleTokenInfo);
+		//Add even listener to get the Keycloak Token
+		window.addEventListener("message", this.handleTokenInfo);
+
+		//Send a message to inform SmartCLIDE IDE
+		let message = buildMessage(messageTypes.COMM_START);
+		window.parent.postMessage(message, "*");
+
 
     //Send a message to inform SmartCLIDE IDE
-    let message = buildMessage(messageTypes.COMM_START);
-    window.parent.postMessage(message, "*");
+    // let message = buildMessage(messageTypes.COMPONENT_HELLO);
+    // window.parent.postMessage(message, "*");
+
   }
   protected onAfterDetach(msg: Message): void {
     window.removeEventListener("message", this.handleTokenInfo);
@@ -338,7 +351,7 @@ export class IamodelerWidget extends ReactWidget {
       myHeaders.append("Authorization", "Bearer " + IamodelerWidget.state.stateKeycloakToken);
     }
 
-    
+
     var raw = JSON.stringify({
       "model-id": IamodelerWidget.state["model_id"],
       "source": {
