@@ -351,7 +351,6 @@ export class IamodelerWidget extends ReactWidget {
       myHeaders.append("Authorization", "Bearer " + IamodelerWidget.state.stateKeycloakToken);
     }
 
-
     var raw = JSON.stringify({
       "model-id": IamodelerWidget.state["model_id"],
       "source": {

@@ -65,15 +65,35 @@ export class SmartAssistantWidget extends ReactWidget {
 
 
 
+  // handleTokenInfo = ({ data }: any) => {
+  //   switch (data.type) {
+  //     case messageTypes.KEYCLOAK_TOKEN:
+  //       console.log("Smartassistant: RECEIVED", JSON.stringify(data, undefined, 4));
+  //       SmartAssistantWidget.state.stateKeycloakToken = data.content;
+  //       break;
+  //     case messageTypes.KEYCLOAK_TOKEN:
+  //       console.log("Smartassistant: RECEIVED", JSON.stringify(data, undefined, 4));
+  //       window.removeEventListener("message", this.handleTokenInfo);
+  //       break;
+  //     default:
+  //       break;
+  //   }
+  // }
+
+  //Handle KEYCLOAK_TOKEN message from parent
   handleTokenInfo = ({ data }: any) => {
     switch (data.type) {
       case messageTypes.KEYCLOAK_TOKEN:
         console.log("Smartassistant: RECEIVED", JSON.stringify(data, undefined, 4));
-        SmartAssistantWidget.state.stateKeycloakToken = data.content;
+        SmartAssistantWidget.state.stateKeycloakToken = data.content.token;
         break;
-      case messageTypes.KEYCLOAK_TOKEN:
+      case messageTypes.COMM_END:
         console.log("Smartassistant: RECEIVED", JSON.stringify(data, undefined, 4));
         window.removeEventListener("message", this.handleTokenInfo);
+        break;
+      case messageTypes.COMM_START_REPLY:
+        console.log("Smartassistant: RECEIVED", JSON.stringify(data, undefined, 4));
+        SmartAssistantWidget.state.stateKeycloakToken = data.content.token;
         break;
       default:
         break;
@@ -99,12 +119,12 @@ export class SmartAssistantWidget extends ReactWidget {
     this.title.iconClass = "fa fa-window-maximize"; // example widget icon.
     this.update();
 
-    //Add event listener to get the Keycloak Token
-    window.addEventListener("message", this.handleTokenInfo);
+		//Add even listener to get the Keycloak Token
+		window.addEventListener("message", this.handleTokenInfo);
 
-    //Send a message to inform SmartCLIDE IDE
-    let message = buildMessage(messageTypes.COMM_START);
-    window.parent.postMessage(message, "*");
+		//Send a message to inform SmartCLIDE IDE
+		let message = buildMessage(messageTypes.COMM_START);
+		window.parent.postMessage(message, "*");
   }
 
   protected onAfterDetach(msg: Message): void {
@@ -507,7 +527,7 @@ export class SmartAssistantWidget extends ReactWidget {
       .then((out) => {
 
         //get result
-        if (out.statusCode === "400" || out.statusCode === "500")   {
+        if (out.statusCode === "400" || out.statusCode === "500") {
           this.messageService.error(out.status);
         } else {
           var obj = JSON.parse(JSON.stringify(out));
