@@ -10,8 +10,9 @@
   ],
   "dependencies": {
     "@theia/core": "latest",
-    "uuid": "^9.0.0",
-    "@unparallel/smartclide-frontend-comm": "latest"
+    "@unparallel/smartclide-frontend-comm": "latest",
+    "jwt-decode": "latest",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@testing-library/react": "^11.2.7",
@@ -20,7 +21,9 @@
     "rimraf": "latest",
     "ts-jest": "^26.5.6",
     "ts-node": "^10.9.1",
-    "typescript": "latest"
+    "typescript": "latest",
+    "jwt-decode": "latest"
+
   },
   "scripts": {
     "prepare": "yarn run clean && yarn run build",
