@@ -12,6 +12,7 @@ export const AUTHORIZATION_TOKEN = '';
 //AIR server config
 // export const SMARTCLIDE_PORT = '5001';
 // export const AUTHORIZATION_REQUIRED = false;
+// export const SMARTCLIDE_Cluster ="https://api.dev.smartclide.eu";
 // export const SMARTCLIDE_HOST ="http://vm-bisite-57.der.usal.es";
 // export const DB_PATH_RETRIVESERVICES= "smartclide-db/services";
 // export const FUNCTIONALITY_PATH_ENVIROMENT  = "/smartclide/v1/dle/environment";
@@ -21,6 +22,7 @@ export const AUTHORIZATION_TOKEN = '';
 //Cluster config
 export const SMARTCLIDE_PORT = '';
 export const AUTHORIZATION_REQUIRED = true;
+export const SMARTCLIDE_Cluster ="https://api.dev.smartclide.eu";
 export const SMARTCLIDE_HOST ="https://api.dev.smartclide.eu";
 export const DB_PATH_RETRIVESERVICES= "smartclide-db/services";
 export const FUNCTIONALITY_PATH_ENVIROMENT  = "/dle/environment";

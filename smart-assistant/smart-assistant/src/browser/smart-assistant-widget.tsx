@@ -14,7 +14,7 @@ import {
   inject,
 } from "@theia/core/shared/inversify";
 import { ChangeEvent } from 'react';
-import Form from "react-bootstrap/Form";
+// import Form from "react-bootstrap/Form";
 import { MessageService } from "@theia/core";
 import * as Configurations from './configuration';
 import { Message } from "@theia/core/lib/browser";
@@ -24,6 +24,7 @@ import { HelloBackendService } from '../common/protocol';
 import DiaplayWidgetDesc from "./display_desc";
 import Resourcesuggestion from "./resourcesuggestion";
 import Acceptancesuggestion from "./acceptance_sugg";
+import DeployedServices from "./deployed_services";
 //validate XML file
 import { XMLValidator } from 'fast-xml-parser';
 // For opening file
@@ -56,6 +57,7 @@ export class SmartAssistantWidget extends ReactWidget {
     file_acceptance: "",
     search: "",
     search_repo: "",
+    options: "",
     stateKeycloakToken: ''
   };
   deployed_services: any = [];
@@ -63,23 +65,12 @@ export class SmartAssistantWidget extends ReactWidget {
   NUMBER_VALIDATOR = /^[0-9]+$/;
   STRING_VALIDATOR = /^[a-zA-Z0-9\/&=._-]{2,120}$/;
 
-
-
-  // handleTokenInfo = ({ data }: any) => {
-  //   switch (data.type) {
-  //     case messageTypes.KEYCLOAK_TOKEN:
-  //       console.log("Smartassistant: RECEIVED", JSON.stringify(data, undefined, 4));
-  //       SmartAssistantWidget.state.stateKeycloakToken = data.content;
-  //       break;
-  //     case messageTypes.KEYCLOAK_TOKEN:
-  //       console.log("Smartassistant: RECEIVED", JSON.stringify(data, undefined, 4));
-  //       window.removeEventListener("message", this.handleTokenInfo);
-  //       break;
-  //     default:
-  //       break;
-  //   }
-  // }
-
+  constructor() {
+    super();
+  }
+  componentDidMount() {
+    console.log('componentDidMount')
+  }
   //Handle KEYCLOAK_TOKEN message from parent
   handleTokenInfo = ({ data }: any) => {
     switch (data.type) {
@@ -100,7 +91,6 @@ export class SmartAssistantWidget extends ReactWidget {
     }
   }
 
-
   @inject(MessageService)
   protected readonly messageService!: MessageService;
 
@@ -119,12 +109,12 @@ export class SmartAssistantWidget extends ReactWidget {
     this.title.iconClass = "fa fa-window-maximize"; // example widget icon.
     this.update();
 
-		//Add even listener to get the Keycloak Token
-		window.addEventListener("message", this.handleTokenInfo);
+    //Add even listener to get the Keycloak Token
+    window.addEventListener("message", this.handleTokenInfo);
 
-		//Send a message to inform SmartCLIDE IDE
-		let message = buildMessage(messageTypes.COMM_START);
-		window.parent.postMessage(message, "*");
+    //Send a message to inform SmartCLIDE IDE
+    let message = buildMessage(messageTypes.COMM_START);
+    window.parent.postMessage(message, "*");
   }
 
   protected onAfterDetach(msg: Message): void {
@@ -132,10 +122,26 @@ export class SmartAssistantWidget extends ReactWidget {
     super.onAfterDetach(msg);
   }
 
-
+  protected async fetchDeployedPublicServices(): Promise<any> {
+    let deployment = new DeployedServices();
+    var res_print = await deployment.fetchDeployedPublicServices();
+    console.log('fetchDeployedPublicServices:', res_print);
+    SmartAssistantWidget.state["options"] = await res_print;
+    console.log('SmartAssistantWidget.state: ', SmartAssistantWidget.state["options"]);
+    return res_print;
+    // SmartAssistantWidget.state["search"])
+  }
   render(): React.ReactElement {
-    var options: any = []
-    options = this.retrieveDeployedServices()
+    // var options: any = []
+    // options = this.retrieveDeployedServices()
+    var res_print = this.fetchDeployedPublicServices().then(resp => {
+      console.log('render: ', SmartAssistantWidget.state["options"]);
+      console.log('res_print: ', resp);
+      return resp;
+    }).then(data => {
+      return data;
+    })
+    console.log('res_print: ', res_print);
 
     //Add widget desc in main container
     const output_ = document.createElement("div");
@@ -170,6 +176,33 @@ export class SmartAssistantWidget extends ReactWidget {
         this.messageService.error(`XML format is invalid`);
         return false;
       }
+    };
+
+    //Template generation using API
+    const handleOptionsClick = () => {
+      var services: any = []
+      // var select = '', rows = '';
+      var table = '', rows = '', th = '';
+      th = "<tr><th>Service</th></tr>"
+      for (var item of SmartAssistantWidget.state["options"]) {
+        console.log('rows:', item)
+        if (item[0]) {
+          const id = (item[0] as any).service_id
+          const name = (item[0] as any).name
+          if (!services.includes(id)) {
+            services.push(id)
+            console.log('name:', name, 'id:', id)
+            rows += "<tr>" +
+              "<td>" +
+              `<a onClick=${this.suggestEnviroment(id)}> ${name}</a>` +
+              "</td>" + "</tr>";
+          }
+        }
+        // rows += "<option value='" + item[0] + "'>" + item[0]['name'] + "</option>";
+      };
+      // select = '<select name="cars" id="cars">' + rows + '</select>';
+      table = '</br><table id="resource_info" style="width: 100%; margin-top: 20px">' + th + rows + '</table>';
+      (document.getElementById("handleOptionsClick") as HTMLElement).innerHTML = table;
     };
 
     //Acceptance file upload
@@ -259,9 +292,14 @@ export class SmartAssistantWidget extends ReactWidget {
         <div id="enviroment_suggestion" className="tabcontent">
           <AlertMessage type="INFO" header="Enviroment Suggestion" />
           <p>
-            Select a target service in order get the environment suggestions:<b>Under Develope</b>
+            Select a target service in order get the environment suggestions:
           </p>
-          <Form.Control
+          <p> Note:If no public service is deployed, the drop-down list can be empty</p>
+          <button onClick={handleOptionsClick} className="btn btn-submit">
+            Load Services <span id='waitAnimation' className="lds-dual-ring"></span>
+          </button>
+          <span id="handleOptionsClick"></span>
+          {/* <Form.Control
             as="select"
             aria-label="Default select example"
             onChange={(e: any) => {
@@ -275,7 +313,7 @@ export class SmartAssistantWidget extends ReactWidget {
                 {option.label}
               </option>
             ))}
-          </Form.Control>
+          </Form.Control> */}
         </div>
         <div id="acceptance_suggestion" className="tabcontent">
           <AlertMessage type="INFO" header="Acceptance Suggestion" />
@@ -496,7 +534,7 @@ export class SmartAssistantWidget extends ReactWidget {
   }
 
 
-  protected suggestEnviroment(): void {
+  protected suggestEnviroment(service: any): void {
     fetch(
       SmartAssistantWidget.cluster_endpoint.host +
       ":" +
@@ -513,7 +551,7 @@ export class SmartAssistantWidget extends ReactWidget {
         body: JSON.stringify({
           header: "resource used",
           service: {
-            id: SmartAssistantWidget.state["service_id"],
+            id: service,
             name: "UserService",
           },
           current_memory: 8,
