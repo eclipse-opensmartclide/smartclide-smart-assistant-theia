@@ -15,7 +15,7 @@
     "test": "cd smart-assistant && yarn test"
   },
   "devDependencies": {
-    "lerna": "2.4.0"
+    "lerna": "6.5.1"
   },
   "workspaces": [
     "smart-assistant", "browser-app", "electron-app"
