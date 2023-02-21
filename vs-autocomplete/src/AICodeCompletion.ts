@@ -10,6 +10,8 @@
 
 import axios from "axios";
 import * as Configurations from './configuration';
+//Add "dom" to "lib": ["dom"] to use window
+import { messageTypes, buildMessage } from '@unparallel/smartclide-frontend-comm';
 
 export class AICodeCompletion {
     inputCode: string;
@@ -17,6 +19,29 @@ export class AICodeCompletion {
     codeCompletionLanguage: string;
     accepted_prefix: string[] = ['import'];
     accepted_keywords: string[] = ['http', 'new'];
+
+    static state = {
+        stateKeycloakToken: ''
+    }
+    //Handle KEYCLOAK_TOKEN message from parent
+    handleTokenInfo = ({ data }: any) => {
+        switch (data.type) {
+            case messageTypes.KEYCLOAK_TOKEN:
+                console.log("Smartassistant: RECEIVED", JSON.stringify(data, undefined, 4));
+                AICodeCompletion.state.stateKeycloakToken = data.content.token;
+                break;
+            case messageTypes.COMM_END:
+                console.log("Smartassistant: RECEIVED", JSON.stringify(data, undefined, 4));
+                window.removeEventListener("message", this.handleTokenInfo);
+                break;
+            case messageTypes.COMM_START_REPLY:
+                console.log("Smartassistant: RECEIVED", JSON.stringify(data, undefined, 4));
+                AICodeCompletion.state.stateKeycloakToken = data.content.token;
+                break;
+            default:
+                break;
+        }
+    }
 
     constructor(
         inputCode = "",
@@ -26,7 +51,20 @@ export class AICodeCompletion {
         this.inputCode = inputCode;
         this.codeCompletionMethod = codeCompletionMethod;
         this.codeCompletionLanguage = codeCompletionLanguage;
+
+        //Add even listener to get the Keycloak Token
+        window.addEventListener("message", this.handleTokenInfo);
+
+        //Send a message to inform SmartCLIDE IDE
+        let message = buildMessage(messageTypes.COMM_START);
+        window.parent.postMessage(message, "*");
+
     }
+
+    // protected onAfterDetach(msg: Message): void {
+    //     window.removeEventListener("message", this.handleTokenInfo);
+    //     super.onAfterDetach(msg);
+    // }
 
     checkCodeStartsKeyword(str: string, accepted_prefix: string[]) {
         if (accepted_prefix.length == 0) {
@@ -73,7 +111,8 @@ export class AICodeCompletion {
             url: Configurations.smartCLIDETargetHost + ':' + Configurations.smartCLIDETargetPort + Configurations.smartCLIDETargetPath,
             headers: {
                 'accept': 'application/json',
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + AICodeCompletion.state.stateKeycloakToken
             },
             data: data
         };
