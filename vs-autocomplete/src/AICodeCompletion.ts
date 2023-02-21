@@ -7,9 +7,10 @@
  * 
  * SPDX-License-Identifier: EPL-2.0
  ******************************************************************************/
-
-import axios from "axios";
+import * as vscode from 'vscode';
+import axios, { AxiosError, AxiosResponse } from "axios";
 import * as Configurations from './configuration';
+
 //Add "dom" to "lib": ["dom"] to use window
 import { messageTypes, buildMessage } from '@unparallel/smartclide-frontend-comm';
 
@@ -20,10 +21,12 @@ export class AICodeCompletion {
     accepted_prefix: string[] = ['import'];
     accepted_keywords: string[] = ['http', 'new'];
 
+
+
     static state = {
         stateKeycloakToken: ''
-    }
-    //Handle KEYCLOAK_TOKEN message from parent
+    };
+    // Handle KEYCLOAK_TOKEN message from parent
     handleTokenInfo = ({ data }: any) => {
         switch (data.type) {
             case messageTypes.KEYCLOAK_TOKEN:
@@ -41,7 +44,7 @@ export class AICodeCompletion {
             default:
                 break;
         }
-    }
+    };
 
     constructor(
         inputCode = "",
@@ -52,12 +55,12 @@ export class AICodeCompletion {
         this.codeCompletionMethod = codeCompletionMethod;
         this.codeCompletionLanguage = codeCompletionLanguage;
 
-        //Add even listener to get the Keycloak Token
-        window.addEventListener("message", this.handleTokenInfo);
+        // //Add even listener to get the Keycloak Token
+        // window.addEventListener("message", this.handleTokenInfo);
 
-        //Send a message to inform SmartCLIDE IDE
-        let message = buildMessage(messageTypes.COMM_START);
-        window.parent.postMessage(message, "*");
+        // //Send a message to inform SmartCLIDE IDE
+        // const message = buildMessage(messageTypes.COMM_START);
+        // window.parent.postMessage(message, "*");
 
     }
 
@@ -95,8 +98,7 @@ export class AICodeCompletion {
             firstName: string;
         }
 
-        // You can export the type TUserList to use as -
-        // props type in your `UserList` component
+
         type TUserList = User[]
         const data = JSON.stringify({
             "code_input": codeInput,
@@ -116,11 +118,27 @@ export class AICodeCompletion {
             },
             data: data
         };
+        
 
         return axios(config)
-            .then(function (response) {
+            .then((response: AxiosResponse) => {
                 console.log('res:::', response.data.code_suggestions);
                 return response.data.code_suggestions;
-            });
+              })
+              .catch((reason: AxiosError) => {
+                if (reason.response!.status === 400) {
+                    console.log('res', reason.response);
+                    vscode.window.showErrorMessage(reason.message);
+                } 
+                if (reason.response!.status === 401) {
+                    console.log('res', reason.response);
+                    vscode.window.showErrorMessage(reason.message);
+                }
+                else {
+                    console.log('not error', reason.response);
+                    vscode.window.showErrorMessage(reason.message);
+                }
+                console.log(reason.message);
+              });
     }
 }
