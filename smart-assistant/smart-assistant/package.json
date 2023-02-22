@@ -11,7 +11,7 @@
   "dependencies": {
     "@theia/core": "latest",
     "@theia/editor": "latest",
-    "@unparallel/smartclide-frontend-comm": "latest",
+    "@unparallel/smartclide-frontend-comm": "1.0.1",
     "@types/node": "^16.11.6",
     "bootstrap": "^5.2.3",
     "chart.js": "^4.0.1",

@@ -10,7 +10,7 @@
   ],
   "dependencies": {
     "@theia/core": "latest",
-    "@unparallel/smartclide-frontend-comm": "latest",
+    "@unparallel/smartclide-frontend-comm": "1.0.1",
     "jwt-decode": "latest",
     "uuid": "^9.0.0"
   },
