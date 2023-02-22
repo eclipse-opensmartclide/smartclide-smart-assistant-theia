@@ -454,9 +454,9 @@ export class IamodelerWidget extends ReactWidget {
             <th>Matthews Phi</th>
           </tr>
           <tr>
-            <td>{data.evaluation.Accuracy}</td>
-            <td>{data.evaluation["Cohen kappa"]}</td>
-            <td>{data.evaluation["Matthews Phi"]}</td>
+          <td>{parseFloat( data.evaluation.Accuracy).toFixed(5)}</td>
+          <td>{parseFloat( data.evaluation["Cohen kappa"]).toFixed(5)}</td>
+          <td>{parseFloat( data.evaluation["Matthews Phi"]).toFixed(5)}</td>
           </tr>
         </table>
         <table id="customers">
@@ -468,21 +468,21 @@ export class IamodelerWidget extends ReactWidget {
           </tr>
           <tr>
             <td>Precision</td>
-            <td>{data.evaluation.Precision.micro}</td>
-            <td>{data.evaluation.Precision.macro}</td>
-            <td>{data.evaluation.Precision.weighted}</td>
+            <td>{parseFloat( data.evaluation.Precision.micro).toFixed(5) }</td>
+            <td>{parseFloat( data.evaluation.Precision.macro).toFixed(5) }</td>
+            <td>{parseFloat( data.evaluation.Precision.weighted).toFixed(5) }</td>
           </tr>
           <tr>
             <td>Recall</td>
-            <td>{data.evaluation.Recall.micro}</td>
-            <td>{data.evaluation.Recall.macro}</td>
-            <td>{data.evaluation.Recall.weighted}</td>
+            <td>{parseFloat( data.evaluation.Recall.micro).toFixed(5) }</td>
+            <td>{parseFloat( data.evaluation.Recall.macro).toFixed(5) }</td>
+            <td>{parseFloat( data.evaluation.Recall.weighted).toFixed(5) }</td>
           </tr>
           <tr>
             <td>F1</td>
-            <td>{data.evaluation.F1.micro}</td>
-            <td>{data.evaluation.F1.macro}</td>
-            <td>{data.evaluation.F1.weighted}</td>
+            <td>{parseFloat(data.evaluation.F1.micro).toFixed(5) }</td>
+            <td>{parseFloat( data.evaluation.F1.macro).toFixed(5) }</td>
+            <td>{parseFloat( data.evaluation.F1.weighted).toFixed(5) }</td>
           </tr>
         </table>
         <h2>Model predictions</h2>
