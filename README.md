@@ -2,7 +2,8 @@
 The Smart-assistant has brought together the AI-based features within one package using AI techniques.
 
 - [ Smart-assistant Theia Extension](#smart-assistant-theia-extension-featuers)
-- [AIModeler Theia Extension](#iamodeler-theia-extension)
+- [ AIModeler Theia Extension](#iamodeler-theia-extension)
+- [ Autocomplete VS Extension](#autocomplete-VS-extension)
 
 
 # Smart-assistant Theia Extension
@@ -10,7 +11,7 @@ The Smart-assistant has brought together the AI-based features within one packag
  
  ### Features
  
-- *Template-based code generation* :   This subcomponent is responsible for generating code based on internal templates. The API returns related code snippets based on templates to implement the workflow represented in BPMN in low code. To test the code generation functionality using BPMN, the BPMN sample file is located in the [dample_files/sample_template](https://github.com/eclipse-opensmartclide/smartclide-smart-assistant-theia/tree/main/smart-assistant/smart-assistant/sample_files), which can be uploaded in the template code generation section to generate sample code.  
+- *Template-based code generation* :   This subcomponent is responsible for generating code based on internal templates. The API returns related code snippets based on templates to implement the workflow represented in BPMN in low code. To test the code generation functionality using BPMN, the BPMN sample file is located in the [sample_files/sample_template](https://github.com/eclipse-opensmartclide/smartclide-smart-assistant-theia/tree/main/smart-assistant/smart-assistant/sample_files), which can be uploaded in the template code generation section to generate sample code.  
 - *Service deployments recommendations* : The resource estimation system has been designed within the formal framework of fuzzy inference systems (FIS). In this case, the aim is to capture the common relationships, understandable to human experts in this field, in rules of a mathematical nature that take into account the uncertainty intrinsic to the natural language. In other words,  this functionality is responsible for giving suggestions to the user about the expected size of the deployment environment for the service being developed. If the selected service environment information has not been assigned, then the deployments recommendations argument will be the default deployments list information.
 - *Search APIs of most common web service providers APIs(e.g., Google)* : This wizard is responsible for providing service URLs of well-known providers like Google(e.g.,  YouTube Data API, Google Maps ). These URLs are extracted from open-source projects using code-mining techniques. 
 - *Search APIs of most common web service providers APIs(e.g., Google)* : This wizard is responsible for providing service URLs of well-known providers like Google(e.g.,  YouTube Data API, Google Maps ). These URLs are extracted from open-source projects using code-mining techniques. 
