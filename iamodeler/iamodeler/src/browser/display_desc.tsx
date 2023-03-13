@@ -11,7 +11,7 @@ import * as React from 'react';
 // import DiaplayMLTABLE from "./models_info";
 
 
-function DiaplayWidgetDesc(module: string, id: any) {
+function DiaplayWidgetDesc(module: string, id: any, desc: any) {
   var widgetInfo =
   {
     name: "IA Modeler",
@@ -99,27 +99,41 @@ function DiaplayWidgetDesc(module: string, id: any) {
         <div id="result_" >
           <p>{tip}</p>
           <table id="customers">
-          <thead>
-            <tr>
-              <th >Method</th>
-              <th >Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            {/* <tr >
+            <thead>
+              <tr>
+                <th >Method</th>
+                <th >Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {/* <tr >
               <td >DB Scan</td>
               <td>Density-based spatial clustering of applications with noise (DBSCAN) is a data clustering algorithm proposed by Martin Ester, Hans-Peter Kriegel, Jörg Sander and Xiaowei Xu in 1996. It is a density-based clustering non-parametric algorithm: given a set of points in some space, it groups together points that are closely packed together (points with many nearby neighbors), marking as outliers points that lie alone in low-density regions (whose nearest neighbors are too far away). DBSCAN is one of the most common clustering algorithms and also most cited in scientific literature.</td>
             </tr> */}
-            <tr >
-              <td>K-Means</td>
-              <td>k-means clustering is a method of vector quantization, originally from signal processing, that aims to partition n observations into k clusters in which each observation belongs to the cluster with the nearest mean (cluster centers or cluster centroid), serving as a prototype of the cluster. </td>
-            </tr>
-          </tbody>
-        </table>
+              <tr >
+                <td>K-Means</td>
+                <td>k-means clustering is a method of vector quantization, originally from signal processing, that aims to partition n observations into k clusters in which each observation belongs to the cluster with the nearest mean (cluster centers or cluster centroid), serving as a prototype of the cluster. </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
 
 
+      </div>
+    );
+  } else if (module == 'getmodels') {
+    widgetInfo =
+    {
+      name: "get models",
+      description: ""
+    }
+    var tip = ""
+    return (
+
+      <div id="widget_desc">
+        <h2>model id is {id}</h2>
+        <p>model description is {desc}</p>
       </div>
     );
   }

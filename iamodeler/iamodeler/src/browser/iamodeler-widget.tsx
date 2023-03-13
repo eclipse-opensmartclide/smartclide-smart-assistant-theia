@@ -14,6 +14,7 @@ import ModelsInfo from "./models_info";
 import jwt_decode from "jwt-decode";
 import { MessageService } from '@theia/core';
 import DiaplayWidgetDesc from "./display_desc";
+import ModelsStorage from "./model_storage";
 import { Message } from '@theia/core/lib/browser';
 import * as Configurations from './configuration';
 import { renderToStaticMarkup } from "react-dom/server";
@@ -55,10 +56,11 @@ export class IamodelerWidget extends ReactWidget {
     cluster_target: "",
     cluster_label_number: "",
     stateKeycloakToken: '',
-    stateUSERID: ''
+    get_models: []
   };
-  model_uuid = ''
-  user_creator_id = ''
+  static model_created = 0;
+  model_uuid = '';
+  user_creator_id = '';
   NUMBER_VALIDATOR = /^[0-9]+$/;
   STRING_VALIDATOR = /^[0-9a-zA-Z_-]{,200}$/;
   suppervised_classifiers = ['bayes', 'random-forest', 'gradient-boosting', 'logistic', 'mlp', 'neighbors', 'sv', 'tree']
@@ -82,7 +84,6 @@ export class IamodelerWidget extends ReactWidget {
       case messageTypes.COMM_START_REPLY:
         console.log("AIModeler: RECEIVED", JSON.stringify(data, undefined, 4));
         IamodelerWidget.state.stateKeycloakToken = data.content.token;
-        // IamodelerWidget.state.stateUSERID = data.content.userID;
         break;
       default:
         break;
@@ -123,7 +124,7 @@ export class IamodelerWidget extends ReactWidget {
 
     //Add widget desc in main container
     const output_ = document.createElement("div");
-    const staticElement = renderToStaticMarkup(DiaplayWidgetDesc("Smart Assistant", ""));
+    const staticElement = renderToStaticMarkup(DiaplayWidgetDesc("Smart Assistant", "", ""));
     output_.innerHTML = `${staticElement}`;
     (document.getElementById("theia-main-content-panel") as HTMLElement).innerHTML = output_.innerHTML;
 
@@ -143,6 +144,13 @@ export class IamodelerWidget extends ReactWidget {
             onClick={(e) => this.displayMenu(e)}
           >
             Unsupervised
+          </button>
+          <button
+            className="tablinks"
+            value="getmodels"
+            onClick={(e) => this.displayMenu(e)}
+          >
+            Models List
           </button>
         </div>
         <div id="classification" className="tabcontent first">
@@ -176,6 +184,22 @@ export class IamodelerWidget extends ReactWidget {
             <button value="Clustering" onClick={() => this.displayContent("clustering")} className='p-link'>Clustering</button>
             <div className='form-widget clustering hidden'>
               {this.clusteringForm()}
+            </div>
+          </div>
+        </div>
+        <div id="getmodels" className="tabcontent">
+          <AlertMessage type="INFO" header="Models List" />
+          <p>
+            <em>
+
+              Table demonstrate created learning model, in which Downloading, Deleting requests, and viewing models detail is controlled through the operation section.
+            </em>
+          </p>
+          <div>
+          </div>
+          <div id="temp_result">
+            <div className='form-widget'>
+              {this.getmodels()}
             </div>
           </div>
         </div>
@@ -215,7 +239,7 @@ export class IamodelerWidget extends ReactWidget {
       <div id="widget_form">
         <div id="result_" className='ia'>
           <>
-            {/* <fieldset>
+            <fieldset>
               <legend>Name</legend>
               <div className="tooltip">    <label htmlFor='name'>Name*:</label>
                 <span className="tooltiptext">Allowed string characters includes [0-9a-zA-Z_-]</span>
@@ -226,7 +250,7 @@ export class IamodelerWidget extends ReactWidget {
                 <span className="tooltiptext">Allowed string characters includes [0-9a-zA-Z_-]</span>
               </div>
               <textarea id='description' name='classifier_description' onChange={this.updateInput} rows={4} cols={50} />
-            </fieldset> */}
+            </fieldset>
             <fieldset>
               <legend>Data Source</legend>
 
@@ -274,12 +298,9 @@ export class IamodelerWidget extends ReactWidget {
               Submit <span id='waitAnimation' className="lds-dual-ring" ></span>
             </button>
 
-            {/* <input type="submit" value="Submit" onClick={() => this.classify()}>
-            <span id='waitAnimation' className="lds-dual-ring"></span>
-            </input> */}
             <div className="hidden after-buttons">
-              <input value="Dlete model" id='classify_delete' onClick={() => this.deleteModel(IamodelerWidget.state["model_id"], 'classify')} type="submit" className='button-model' />
-              <input value="Download model" onClick={() => this.downloadModel(IamodelerWidget.state["model_id"])} type="submit" className='button-model' />
+              <input style={{ width: '45%', margin: '8px 2.5%' }} value="Dlete model" id='classify_delete' onClick={() => this.deleteModel(IamodelerWidget.state["model_id"], 'classify')} type="submit" className='button-model' />
+              <input style={{ width: '45%', margin: '8px 2.5%' }} value="Download model" onClick={() => this.downloadModel(IamodelerWidget.state["model_id"])} type="submit" className='button-model' />
             </div>
           </>
         </div>
@@ -306,7 +327,7 @@ export class IamodelerWidget extends ReactWidget {
 
     //add wait
     (document.getElementById("waitAnimation") as HTMLElement).style.display = "block";
-
+    var model_created = 0
 
     var selected = document.querySelectorAll('.after-buttons');
     selected[0].classList.add("hidden");
@@ -319,7 +340,6 @@ export class IamodelerWidget extends ReactWidget {
     }
     if (IamodelerWidget.state["classifier_name"] === '') {
       IamodelerWidget.state["classifier_name"] = 'classifer_model_' + this.getRandomInt(1, 100000)
-      console.log(IamodelerWidget.state["classifier_name"])
     } else if (!this.validator(IamodelerWidget.state["classifier_name"], 'string')) {
       err_msg.push("Classifier Name: Allowed string characters includes [0-9a-zA-Z_-]  between 0-200")
 
@@ -391,7 +411,11 @@ export class IamodelerWidget extends ReactWidget {
         return response.json()
       })
       .then((result: any) => {
-        if (result.status === "ok") { this.messageService.info("The Supervised model using " + IamodelerWidget.state["classifier_method"] + " is created successfully") }
+        if (result.status === "ok") {
+          this.messageService.info("The Supervised model using " + IamodelerWidget.state["classifier_method"] + " is created successfully")
+          //dont
+          model_created = 1
+        }
       })
       .catch((error: any) => {
 
@@ -401,8 +425,31 @@ export class IamodelerWidget extends ReactWidget {
       });
 
 
+    // if (IamodelerWidget.model_created == 0) {
+    //   return;
+    // }
+    console.log("created?");
+    if (model_created)
+      console.log("created?");
+
+    var sotrage_obj = new ModelsStorage()
+    // console.log('sotrage_obj', sotrage_obj)
+    sotrage_obj.model_data_arr.model_id = IamodelerWidget.state["model_id"];
+    sotrage_obj.model_data_arr.model_category = sotrage_obj.CLASSIFIER_CAT;
+    sotrage_obj.model_data_arr.user_creator_id = this.getUserID();
+    sotrage_obj.model_data_arr.model_name = IamodelerWidget.state["classifier_name"];
+    sotrage_obj.model_data_arr.model_description = IamodelerWidget.state["classifier_description"];
+    sotrage_obj.model_data_arr.model_file_uri = IamodelerWidget.state["classifier_file"];
+    sotrage_obj.model_data_arr.model_method = IamodelerWidget.state["classifier_method"];
+    sotrage_obj.model_data_arr.model_target = IamodelerWidget.state["classifier_target"];
+    // sotrage_obj.model_data_arr.model_size = Number(IamodelerWidget.state["classifier_size"]);
+    if (!sotrage_obj.insertMLModel()) {
+      this.messageService.error("Unable to process request please try again.")
+      return false;
+    }
+
     //Delay to creat model on server
-    var seconds = 4
+    var seconds = 3
     var waitTill = new Date(new Date().getTime() + seconds * 1000);
     while (waitTill > new Date()) { }
 
@@ -454,9 +501,9 @@ export class IamodelerWidget extends ReactWidget {
             <th>Matthews Phi</th>
           </tr>
           <tr>
-          <td>{parseFloat( data.evaluation.Accuracy).toFixed(5)}</td>
-          <td>{parseFloat( data.evaluation["Cohen kappa"]).toFixed(5)}</td>
-          <td>{parseFloat( data.evaluation["Matthews Phi"]).toFixed(5)}</td>
+            <td>{parseFloat(data.evaluation.Accuracy).toFixed(5)}</td>
+            <td>{parseFloat(data.evaluation["Cohen kappa"]).toFixed(5)}</td>
+            <td>{parseFloat(data.evaluation["Matthews Phi"]).toFixed(5)}</td>
           </tr>
         </table>
         <table id="customers">
@@ -468,21 +515,21 @@ export class IamodelerWidget extends ReactWidget {
           </tr>
           <tr>
             <td>Precision</td>
-            <td>{parseFloat( data.evaluation.Precision.micro).toFixed(5) }</td>
-            <td>{parseFloat( data.evaluation.Precision.macro).toFixed(5) }</td>
-            <td>{parseFloat( data.evaluation.Precision.weighted).toFixed(5) }</td>
+            <td>{parseFloat(data.evaluation.Precision.micro).toFixed(5)}</td>
+            <td>{parseFloat(data.evaluation.Precision.macro).toFixed(5)}</td>
+            <td>{parseFloat(data.evaluation.Precision.weighted).toFixed(5)}</td>
           </tr>
           <tr>
             <td>Recall</td>
-            <td>{parseFloat( data.evaluation.Recall.micro).toFixed(5) }</td>
-            <td>{parseFloat( data.evaluation.Recall.macro).toFixed(5) }</td>
-            <td>{parseFloat( data.evaluation.Recall.weighted).toFixed(5) }</td>
+            <td>{parseFloat(data.evaluation.Recall.micro).toFixed(5)}</td>
+            <td>{parseFloat(data.evaluation.Recall.macro).toFixed(5)}</td>
+            <td>{parseFloat(data.evaluation.Recall.weighted).toFixed(5)}</td>
           </tr>
           <tr>
             <td>F1</td>
-            <td>{parseFloat(data.evaluation.F1.micro).toFixed(5) }</td>
-            <td>{parseFloat( data.evaluation.F1.macro).toFixed(5) }</td>
-            <td>{parseFloat( data.evaluation.F1.weighted).toFixed(5) }</td>
+            <td>{parseFloat(data.evaluation.F1.micro).toFixed(5)}</td>
+            <td>{parseFloat(data.evaluation.F1.macro).toFixed(5)}</td>
+            <td>{parseFloat(data.evaluation.F1.weighted).toFixed(5)}</td>
           </tr>
         </table>
         <h2>Model predictions</h2>
@@ -490,7 +537,7 @@ export class IamodelerWidget extends ReactWidget {
           Make predictions using an existing model <br />
           model id is: {model_uuid} <br />
           <pre>
-            &#x63;&#x75;&#x72;&#x6c;&#x20;&#x2d;&#x58;&#x20;&#x27;&#x50;&#x4f;&#x53;&#x54;&#x27;&#x20;&#x5c;&#xa;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x27;&#x68;&#x74;&#x74;&#x70;&#x3a;&#x2f;&#x2f;&#x76;&#x6d;&#x2d;&#x62;&#x69;&#x73;&#x69;&#x74;&#x65;&#x2d;&#x35;&#x37;&#x2e;&#x64;&#x65;&#x72;&#x2e;&#x75;&#x73;&#x61;&#x6c;&#x2e;&#x65;&#x73;&#x3a;&#x35;&#x30;&#x30;&#x31;&#x2f;&#x73;&#x6d;&#x61;&#x72;&#x74;&#x63;&#x6c;&#x69;&#x64;&#x65;&#x2f;&#x76;&#x31;&#x2f;&#x69;&#x61;&#x6d;&#x6f;&#x64;&#x65;&#x6c;&#x65;&#x72;&#x2f;&#x73;&#x75;&#x70;&#x65;&#x72;&#x76;&#x69;&#x73;&#x65;&#x64;&#x2f;&#x5b;&#x4d;&#x4f;&#x44;&#x45;&#x4c;&#x5f;&#x49;&#x44;&#x5d;&#x2f;&#x70;&#x72;&#x65;&#x64;&#x69;&#x63;&#x74;&#x27;&#x20;&#x5c;&#xa;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x2d;&#x48;&#x20;&#x27;&#x61;&#x63;&#x63;&#x65;&#x70;&#x74;&#x3a;&#x20;&#x61;&#x70;&#x70;&#x6c;&#x69;&#x63;&#x61;&#x74;&#x69;&#x6f;&#x6e;&#x2f;&#x6a;&#x73;&#x6f;&#x6e;&#x27;&#x20;&#x5c;&#xa;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x2d;&#x48;&#x20;&#x27;&#x43;&#x6f;&#x6e;&#x74;&#x65;&#x6e;&#x74;&#x2d;&#x54;&#x79;&#x70;&#x65;&#x3a;&#x20;&#x61;&#x70;&#x70;&#x6c;&#x69;&#x63;&#x61;&#x74;&#x69;&#x6f;&#x6e;&#x2f;&#x6a;&#x73;&#x6f;&#x6e;&#x27;&#x20;&#x5c;&#xa;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x2d;&#x64;&#x20;&#x27;&#x7b;&#xa;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x22;&#x64;&#x61;&#x74;&#x61;&#x22;&#x3a;&#x20;&#x5b;&#xa;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x5b;&#x20;&#x46;&#x31;&#x31;&#x2c;&#x20;&#x2e;&#x2e;&#x2e;&#x2c;&#x20;&#x46;&#x31;&#x6e;&#x5d;&#x2c;&#xa;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x5b;&#x2e;&#x2e;&#x2e;&#x5d;&#x2c;&#xa;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x5b;&#x20;&#x46;&#x6d;&#x31;&#x2c;&#x2e;&#x2e;&#x2e;&#x2c;&#x46;&#x6d;&#x6e;&#x5d;&#xa;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x5d;&#xa;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x7d;&#x27;
+            &#x63;&#x75;&#x72;&#x6c;&#x20;&#x2d;&#x58;&#x20;&#x27;&#x50;&#x4f;&#x53;&#x54;&#x27;&#x20;&#x5c;&#x0a;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x27;&#x68;&#x74;&#x74;&#x70;&#x73;&#x3a;&#x2f;&#x2f;&#x5b;&#x53;&#x6d;&#x61;&#x72;&#x74;&#x43;&#x4c;&#x49;&#x44;&#x45;&#x48;&#x4f;&#x53;&#x54;&#x5d;&#x2f;&#x69;&#x61;&#x6d;&#x6f;&#x64;&#x65;&#x6c;&#x65;&#x72;&#x2f;&#x73;&#x75;&#x70;&#x65;&#x72;&#x76;&#x69;&#x73;&#x65;&#x64;&#x2f;&#x5b;&#x4d;&#x4f;&#x44;&#x45;&#x4c;&#x5f;&#x49;&#x44;&#x5d;&#x2f;&#x70;&#x72;&#x65;&#x64;&#x69;&#x63;&#x74;&#x27;&#x20;&#x5c;&#x0a;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x2d;&#x48;&#x20;&#x27;&#x61;&#x63;&#x63;&#x65;&#x70;&#x74;&#x3a;&#x20;&#x61;&#x70;&#x70;&#x6c;&#x69;&#x63;&#x61;&#x74;&#x69;&#x6f;&#x6e;&#x2f;&#x6a;&#x73;&#x6f;&#x6e;&#x27;&#x20;&#x5c;&#x0a;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x2d;&#x48;&#x20;&#x27;&#x43;&#x6f;&#x6e;&#x74;&#x65;&#x6e;&#x74;&#x2d;&#x54;&#x79;&#x70;&#x65;&#x3a;&#x20;&#x61;&#x70;&#x70;&#x6c;&#x69;&#x63;&#x61;&#x74;&#x69;&#x6f;&#x6e;&#x2f;&#x6a;&#x73;&#x6f;&#x6e;&#x27;&#x20;&#x5c;&#x0a;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x2d;&#x64;&#x20;&#x27;&#x7b;&#x0a;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x22;&#x64;&#x61;&#x74;&#x61;&#x22;&#x3a;&#x20;&#x5b;&#x0a;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x5b;&#x20;&#x46;&#x31;&#x31;&#x2c;&#x20;&#x2e;&#x2e;&#x2e;&#x2c;&#x20;&#x46;&#x31;&#x6e;&#x5d;&#x2c;&#x0a;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x5b;&#x2e;&#x2e;&#x2e;&#x5d;&#x2c;&#x0a;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x5b;&#x20;&#x46;&#x6d;&#x31;&#x2c;&#x2e;&#x2e;&#x2e;&#x2c;&#x46;&#x6d;&#x6e;&#x5d;&#x0a;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x5d;&#x0a;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x7d;&#x27;
           </pre>
         </span>
       </div>
@@ -506,7 +553,15 @@ export class IamodelerWidget extends ReactWidget {
       path = 'supervised'
     }
     let text = "Are you sure to delete this item?";
+
+    //TODO Delete from databse:
+    var sotrage_obj = new ModelsStorage()
+    if (!sotrage_obj.DeleteMLModel(model_uuid)) {
+      return false;
+    }
+
     if (confirm(text) == true) {
+
 
       var myHeaders = new Headers();
       myHeaders.append("accept", "application/json");
@@ -560,7 +615,7 @@ export class IamodelerWidget extends ReactWidget {
     return (
       <div id="widget_form">
         <div id="result_" className='ia'>
-          {/* <fieldset>
+          <fieldset>
             <legend>Name</legend>
             <div className="tooltip">    <label htmlFor='name'>Name*:</label>
               <span className="tooltiptext">Allowed string characters includes [0-9a-zA-Z_-]</span>
@@ -570,7 +625,7 @@ export class IamodelerWidget extends ReactWidget {
               <span className="tooltiptext">Allowed string characters includes [0-9a-zA-Z_-]</span>
             </div>
             <textarea id='regressor_description' name='regressor_description' onChange={this.updateInput} rows={4} cols={50} />
-          </fieldset> */}
+          </fieldset>
 
           <fieldset>
             <legend>Data Source</legend>
@@ -620,10 +675,9 @@ export class IamodelerWidget extends ReactWidget {
           </button>
 
 
-          {/* <input type="submit" value="Submit" onClick={() => this.regressoion()}></input> */}
           <div className="hidden regressor-after-buttons">
-            <input value="Dlete model" id='regressor_delete' onClick={() => this.deleteModel(IamodelerWidget.state["model_id"], 'regressor')} type="submit" className='button-model' />
-            <input value="Download model" onClick={() => this.downloadModel(IamodelerWidget.state["model_id"])} type="submit" className='button-model' />
+            <input style={{ width: '45%', margin: '8px 2.5%' }} value="Dlete model" id='regressor_delete' onClick={() => this.deleteModel(IamodelerWidget.state["model_id"], 'regressor')} type="submit" className='button-model' />
+            <input style={{ width: '45%', margin: '8px 2.5%' }} value="Download model" onClick={() => this.downloadModel(IamodelerWidget.state["model_id"])} type="submit" className='button-model' />
           </div>
         </div>
       </div>
@@ -711,7 +765,10 @@ export class IamodelerWidget extends ReactWidget {
         return response.json()
       })
       .then((result: any) => {
-        if (result.status === "ok") { this.messageService.info("The Supervised model using " + IamodelerWidget.state["regressor_method"] + " is created successfully") }
+        if (result.status === "ok") {
+          this.messageService.info("The Supervised model using " + IamodelerWidget.state["regressor_method"] + " is created successfully");
+          IamodelerWidget.model_created = 1;
+        }
       })
       .catch((error: any) => {
 
@@ -721,10 +778,28 @@ export class IamodelerWidget extends ReactWidget {
 
 
     //delay to creat model on server
-    var seconds = 4
+    var seconds = 3
     var waitTill = new Date(new Date().getTime() + seconds * 1000);
     while (waitTill > new Date()) { }
 
+    // if (IamodelerWidget.model_created == 0) {
+    //   return;
+    // }
+
+    var sotrage_obj = new ModelsStorage()
+    sotrage_obj.model_data_arr.model_id = IamodelerWidget.state["model_id"];
+    sotrage_obj.model_data_arr.model_category = sotrage_obj.REGRESSOR_CAT;
+    sotrage_obj.model_data_arr.user_creator_id = this.getUserID();
+    sotrage_obj.model_data_arr.model_name = IamodelerWidget.state["regressor_name"];
+    sotrage_obj.model_data_arr.model_description = IamodelerWidget.state["regressor_description"];
+    sotrage_obj.model_data_arr.model_file_uri = IamodelerWidget.state["regressor_file"];
+    sotrage_obj.model_data_arr.model_method = IamodelerWidget.state["regressor_method"];
+    sotrage_obj.model_data_arr.model_target = IamodelerWidget.state["regressor_target"];
+    // sotrage_obj.model_data.model_size = Number(IamodelerWidget.state["regressor_size"]);
+    if (!sotrage_obj.insertMLModel()) {
+      this.messageService.error("Unable to process request please try again.")
+      return false;
+    }
     var evall_url = this.getHostURI() + "/supervised/" + this.model_uuid + "/evaluate";
     fetch(evall_url, {
       method: 'GET',
@@ -749,13 +824,162 @@ export class IamodelerWidget extends ReactWidget {
       .catch((error: any) => console.log('error', error));
 
   }
+  getmodels() {
+    var sotrage_obj = new ModelsStorage()
+    var get_models: any = sotrage_obj.getMLModels()
+    get_models.then((response: any) => {
+      console.log('state get_modelsget_models: ', response)
+      IamodelerWidget.state["get_models"] = response;
+    })
+    return (
+      <div id="widget_form">
+        {JSON.stringify(IamodelerWidget.state["get_models"])}
+        <div id="result_" className='ia'>
+          <table id="models_list">
+            <tr>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Method</th>
+              <th>Operation</th>
+            </tr>
+            {IamodelerWidget.state["get_models"].map((model: any) => (
+              <tr key={model.id}>
+                <td>
+                  {model.name}
+                </td>
+                <td>
+                  {model.category}
+                </td>
+                <td>
+                  {model.method}
+                </td>
+                <td>
+                  <a style={{ fontSize: '8px', margin: '0px 2px', color: '#ecf9f2', cursor: 'pointer', padding: '2px' }} onClick={() => this.describeModel(model.id, model.description, 'target', 'category', model.lablenumber)}>View</a>
+                  <span style={{ fontSize: '8px', padding: '2px', color: '#ecf900' }} >|</span>
+                  <a style={{ fontSize: '8px', margin: '0px 2px', color: '#ecf9f2', cursor: 'pointer', padding: '2px' }} onClick={() => this.downloadModel(model.id)}>Download</a>
+                  <span style={{ fontSize: '8px', padding: '2px', color: '#ecf900' }} >|</span>
+                  <a style={{ fontSize: '8px', margin: '0px 2px', color: '#e6b3b3', cursor: 'pointer', padding: '2px' }} onClick={() => this.deleteModel(model.id, model.type)}>Delete</a>
+                </td>
+              </tr>
+            ))}
+          </table>
+        </div>
+      </div >
+    );
+    var sotrage_obj = new ModelsStorage()
+    var get_models: any = sotrage_obj.getMLModels()
+    return get_models.then((response: any) => {
+      console.log('get_modelsget_models: ', response)
+      return (
+        <div id="widget_form">
+          <div id="result_" className='ia'>
+            <table id="models_list">
+              <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Method</th>
+                <th>Operation</th>
+              </tr>
+              {response.map((model: any) => (
+                <tr key={model.id}>
+                  <td>
+                    {model.name}
+                  </td>
+                  <td>
+                    {model.category}
+                  </td>
+                  <td>
+                    {model.method}
+                  </td>
+                  <td>
+                    <a style={{ fontSize: '8px', margin: '0px 2px', color: '#ecf9f2', cursor: 'pointer', padding: '2px' }} onClick={() => this.describeModel(model.id, model.description, 'target', 'category', model.lablenumber)}>View</a>
+                    <span style={{ fontSize: '8px', padding: '2px', color: '#ecf900' }} >|</span>
+                    <a style={{ fontSize: '8px', margin: '0px 2px', color: '#ecf9f2', cursor: 'pointer', padding: '2px' }} onClick={() => this.downloadModel(model.id)}>Download</a>
+                    <span style={{ fontSize: '8px', padding: '2px', color: '#ecf900' }} >|</span>
+                    <a style={{ fontSize: '8px', margin: '0px 2px', color: '#e6b3b3', cursor: 'pointer', padding: '2px' }} onClick={() => this.deleteModel(model.id, model.type)}>Delete</a>
+                  </td>
+                </tr>
+              ))}
+            </table>
+          </div>
+        </div >
+      );
+    })
+    console.log('get_modelsget_modelsget_modelsget_models:', get_models)
+  }
+
+  describeModel(model_id: string, desc: string, method: string, category: string, lablenumber: number) {
+
+    var myHeaders = new Headers();
+    myHeaders.append("accept", "application/json");
+    myHeaders.append("Content-Type", "application/json");
+    if (Configurations.AUTHORIZATION_REQUIRED) {
+      myHeaders.append("Authorization", "Bearer " + IamodelerWidget.state.stateKeycloakToken);
+    }
+
+    model_id = "test-c2099d83-1c55ac5b-aa080469-a44603ef--"
+    //Get Model detail info
+    var model_storage = new ModelsStorage()
+    if (category == model_storage.CLASSIFIER_CAT || category == model_storage.REGRESSOR_CAT) {
+      var evall_url = this.getHostURI() + "/supervised/" + model_id + "/evaluate";
+      fetch(evall_url, {
+        method: 'GET',
+        headers: myHeaders,
+        redirect: 'follow'
+      })
+        .then((response: any) => {
+          return response.json()
+        })
+        .then((result: any) => {
+          var classifier_method = method;
+          (document.getElementById("theia-main-content-panel") as HTMLElement).innerHTML = renderToStaticMarkup(this.DiaplayTrainedMLDesc(result, classifier_method, model_id))
+          var selected = document.querySelectorAll('.after-buttons');
+          selected[0].classList.add("show")
+          selected[0].classList.remove("hidden");
+          var input = document.getElementById("classify_delete");
+          if (input) {
+            input.focus();
+          }
+        })
+        .catch((error: any) => console.log('error', error));
+
+      const output_ = document.createElement("div");
+      const staticElement = renderToStaticMarkup(DiaplayWidgetDesc("getmodels", model_id, desc));
+      output_.innerHTML = `${staticElement}`;
+    } else if (category == model_storage.CLUSTER_CAT) {
+      //Get Model info
+      var evall_url = this.getHostURI() + "/unsupervised/clustering/" + model_id + "/labels";
+      fetch(evall_url, {
+        method: 'GET',
+        headers: myHeaders,
+        redirect: 'follow'
+      })
+        .then((response: any) => {
+          return response.json()
+        })
+        .then((result: any) => {
+          var cluster_method = method;
+          (document.getElementById("theia-main-content-panel") as HTMLElement).innerHTML = renderToStaticMarkup(this.DiaplayTrainedclusterMLDesc(result, cluster_method, model_id, Number(lablenumber)))
+          var selected = document.querySelectorAll('.after-buttons');
+          selected[0].classList.add("show")
+          selected[0].classList.remove("hidden");
+          var input = document.getElementById("classify_delete");
+          if (input) {
+            input.focus();
+          }
+        })
+        .catch((error: any) => console.log('error', error));
+    }
+
+  }
+
 
 
   clusteringForm() {
     return (
       <div id="widget_form">
         <div id="result_" className='ia'>
-          {/* <fieldset>
+          <fieldset>
             <legend>Name</legend>
             <div className="tooltip">    <label htmlFor='cluster_name'>Name*:</label>
               <span className="tooltiptext">Allowed string characters includes [0-9a-zA-Z_-]</span>
@@ -765,7 +989,7 @@ export class IamodelerWidget extends ReactWidget {
               <span className="tooltiptext">Allowed string characters includes [0-9a-zA-Z_-]</span>
             </div>
             <textarea id='cluster_description' name='cluster_description' onChange={this.updateInput} rows={4} cols={50} />
-          </fieldset> */}
+          </fieldset>
           <fieldset>
             <legend>Data Source</legend>
 
@@ -790,13 +1014,12 @@ export class IamodelerWidget extends ReactWidget {
             </div>
             <input id="cluster_label_number" name="cluster_label_number" onChange={this.updateInput} />
           </fieldset>
-          {/* <input type="submit" value="Submit" onClick={() => this.cluster()}></input> */}
           <button onClick={() => this.cluster()} className='button-model-large'>
             Submit <span id='waitAnimation' className="lds-dual-ring" ></span>
           </button>
 
           <div className="hidden cluster-after-buttons">
-            <input value="Dlete model" id='cluster_delete' onClick={() => this.deleteModel(IamodelerWidget.state["model_id"], 'cluster')} type="submit" className='button-model' />
+            <input style={{ width: '45%', margin: '8px 2.5%' }} value="Dlete model" id='cluster_delete' onClick={() => this.deleteModel(IamodelerWidget.state["model_id"], 'cluster')} type="submit" className='button-model' />
             {/* <input value="Download model" onClick={() => this.downloadModel(IamodelerWidget.state["model_id"])} type="submit" className='button-model' /> */}
           </div>
         </div>
@@ -887,7 +1110,10 @@ export class IamodelerWidget extends ReactWidget {
         return response.json()
       })
       .then((result: any) => {
-        if (result.status === "ok") { this.messageService.info("The Unupervised model using " + IamodelerWidget.state["cluster_method"] + " is created successfully.") }
+        if (result.status === "ok") {
+          this.messageService.info("The Unupervised model using " + IamodelerWidget.state["cluster_method"] + " is created successfully.");
+          IamodelerWidget.model_created = 1;
+        }
         var selected = document.querySelectorAll('.cluster-after-buttons');
         selected[0].classList.add("show")
         selected[0].classList.remove("hidden");
@@ -910,6 +1136,23 @@ export class IamodelerWidget extends ReactWidget {
     var waitTill = new Date(new Date().getTime() + seconds * 1000);
     while (waitTill > new Date()) { }
 
+    // if (IamodelerWidget.model_created == 0) {
+    //   return;
+    // }
+
+    var sotrage_obj = new ModelsStorage()
+    sotrage_obj.model_data_arr.model_id = IamodelerWidget.state["model_id"];
+    sotrage_obj.model_data_arr.model_category = sotrage_obj.CLUSTER_CAT;
+    sotrage_obj.model_data_arr.user_creator_id = this.getUserID();
+    sotrage_obj.model_data_arr.model_name = IamodelerWidget.state["cluster_name"];
+    sotrage_obj.model_data_arr.model_description = IamodelerWidget.state["cluster_description"];
+    sotrage_obj.model_data_arr.model_file_uri = IamodelerWidget.state["cluster_file"];
+    sotrage_obj.model_data_arr.model_method = IamodelerWidget.state["cluster_method"];
+    if (!sotrage_obj.insertMLModel()) {
+      this.messageService.error("Unable to process request please try again.")
+      return false;
+    }
+
     //Get Model info
     var evall_url = this.getHostURI() + "/unsupervised/clustering/" + this.model_uuid + "/labels";
     fetch(evall_url, {
@@ -921,8 +1164,7 @@ export class IamodelerWidget extends ReactWidget {
         return response.json()
       })
       .then((result: any) => {
-        var cluster_method = IamodelerWidget.state["cluster_method"]
-        console.log(IamodelerWidget.state["cluster_method"]);
+        var cluster_method = IamodelerWidget.state["cluster_method"];
         (document.getElementById("theia-main-content-panel") as HTMLElement).innerHTML = renderToStaticMarkup(this.DiaplayTrainedclusterMLDesc(result, cluster_method, this.model_uuid, Number(IamodelerWidget.state["cluster_label_number"])))
 
         var selected = document.querySelectorAll('.after-buttons');
@@ -939,6 +1181,7 @@ export class IamodelerWidget extends ReactWidget {
 
   DiaplayTrainedclusterMLDesc(data: any, cluster_method: any, model_uuid: any, cluster_number: any) {
     var labels: any;
+    console.log(labels)
     var cluster_labeles = ''
     var modelsInfoObj = new ModelsInfo();
     var model_info = modelsInfoObj.get_un_supervised_model_desc(cluster_method)
@@ -950,10 +1193,7 @@ export class IamodelerWidget extends ReactWidget {
       console.log(e)
       cluster_labeles = ''
       labels = ''
-      // code that handles the error
-
     }
-    console.log(labels)
     return (
       <div id="widget_desc">
         <h2>Model Description</h2>
@@ -968,7 +1208,7 @@ export class IamodelerWidget extends ReactWidget {
           Make batch predictions using an existing clustering <br />
           model id is: {model_uuid} <br />
           <pre>
-            &#x63;&#x75;&#x72;&#x6c;&#x20;&#x2d;&#x58;&#x20;&#x27;&#x50;&#x4f;&#x53;&#x54;&#x27;&#x20;&#x5c;&#xa;&#x20;&#x20;&#x27;&#x68;&#x74;&#x74;&#x70;&#x3a;&#x2f;&#x2f;&#x76;&#x6d;&#x2d;&#x62;&#x69;&#x73;&#x69;&#x74;&#x65;&#x2d;&#x35;&#x37;&#x2e;&#x64;&#x65;&#x72;&#x2e;&#x75;&#x73;&#x61;&#x6c;&#x2e;&#x65;&#x73;&#x3a;&#x35;&#x30;&#x30;&#x31;&#x2f;&#x73;&#x6d;&#x61;&#x72;&#x74;&#x63;&#x6c;&#x69;&#x64;&#x65;&#x2f;&#x76;&#x31;&#x2f;&#x69;&#x61;&#x6d;&#x6f;&#x64;&#x65;&#x6c;&#x65;&#x72;&#x2f;&#x75;&#x6e;&#x73;&#x75;&#x70;&#x65;&#x72;&#x76;&#x69;&#x73;&#x65;&#x64;&#x2f;&#x63;&#x6c;&#x75;&#x73;&#x74;&#x65;&#x72;&#x69;&#x6e;&#x67;&#x2f;&#x5b;&#x4d;&#x4f;&#x44;&#x45;&#x4c;&#x5f;&#x49;&#x44;&#x5d;&#x2f;&#x62;&#x61;&#x74;&#x63;&#x68;&#x2d;&#x70;&#x72;&#x65;&#x64;&#x69;&#x63;&#x74;&#x27;&#x20;&#x5c;&#xa;&#x20;&#x20;&#x2d;&#x48;&#x20;&#x27;&#x61;&#x63;&#x63;&#x65;&#x70;&#x74;&#x3a;&#x20;&#x61;&#x70;&#x70;&#x6c;&#x69;&#x63;&#x61;&#x74;&#x69;&#x6f;&#x6e;&#x2f;&#x6a;&#x73;&#x6f;&#x6e;&#x27;&#x20;&#x5c;&#xa;&#x20;&#x20;&#x2d;&#x48;&#x20;&#x27;&#x43;&#x6f;&#x6e;&#x74;&#x65;&#x6e;&#x74;&#x2d;&#x54;&#x79;&#x70;&#x65;&#x3a;&#x20;&#x61;&#x70;&#x70;&#x6c;&#x69;&#x63;&#x61;&#x74;&#x69;&#x6f;&#x6e;&#x2f;&#x6a;&#x73;&#x6f;&#x6e;&#x27;&#x20;&#x5c;&#xa;&#x20;&#x20;&#x2d;&#x64;&#x20;&#x27;&#x7b;&#xa;&#x20;&#x20;&#x22;&#x73;&#x6f;&#x75;&#x72;&#x63;&#x65;&#x22;&#x3a;&#x20;&#x7b;&#xa;&#x20;&#x20;&#x20;&#x20;&#x22;&#x74;&#x79;&#x70;&#x65;&#x22;&#x3a;&#x20;&#x22;&#x6a;&#x73;&#x6f;&#x6e;&#x22;&#x2c;&#xa;&#x20;&#x20;&#x20;&#x20;&#x22;&#x69;&#x64;&#x22;&#x3a;&#x20;&#x22;&#x5b;&#x46;&#x49;&#x4c;&#x45;&#x5d;&#x22;&#xa;&#x20;&#x20;&#x7d;&#x2c;&#xa;&#x20;&#x20;&#x22;&#x66;&#x65;&#x61;&#x74;&#x75;&#x72;&#x65;&#x2d;&#x6d;&#x61;&#x70;&#x70;&#x69;&#x6e;&#x67;&#x22;&#x3a;&#x20;&#x5b;&#xa;&#x20;&#x20;&#x20;&#x20;&#x66;&#x31;&#x2c;&#x20;&#x2e;&#x2e;&#x2e;&#x2c;&#x20;&#x66;&#x6e;&#x20;&#x20;&#x5d;&#xa;&#x7d;&#x27;
+            &#x63;&#x75;&#x72;&#x6c;&#x20;&#x2d;&#x58;&#x20;&#x27;&#x50;&#x4f;&#x53;&#x54;&#x27;&#x20;&#x5c;&#x0a;&#x20;&#x20;&#x27;&#x68;&#x74;&#x74;&#x70;&#x73;&#x3a;&#x2f;&#x2f;&#x5b;&#x53;&#x6d;&#x61;&#x72;&#x74;&#x43;&#x4c;&#x49;&#x44;&#x45;&#x48;&#x4f;&#x53;&#x54;&#x5d;&#x2f;&#x69;&#x61;&#x6d;&#x6f;&#x64;&#x65;&#x6c;&#x65;&#x72;&#x2f;&#x75;&#x6e;&#x73;&#x75;&#x70;&#x65;&#x72;&#x76;&#x69;&#x73;&#x65;&#x64;&#x2f;&#x63;&#x6c;&#x75;&#x73;&#x74;&#x65;&#x72;&#x69;&#x6e;&#x67;&#x2f;&#x5b;&#x4d;&#x4f;&#x44;&#x45;&#x4c;&#x5f;&#x49;&#x44;&#x5d;&#x2f;&#x62;&#x61;&#x74;&#x63;&#x68;&#x2d;&#x70;&#x72;&#x65;&#x64;&#x69;&#x63;&#x74;&#x27;&#x20;&#x5c;&#x0a;&#x20;&#x20;&#x2d;&#x48;&#x20;&#x27;&#x61;&#x63;&#x63;&#x65;&#x70;&#x74;&#x3a;&#x20;&#x61;&#x70;&#x70;&#x6c;&#x69;&#x63;&#x61;&#x74;&#x69;&#x6f;&#x6e;&#x2f;&#x6a;&#x73;&#x6f;&#x6e;&#x27;&#x20;&#x5c;&#x0a;&#x20;&#x20;&#x2d;&#x48;&#x20;&#x27;&#x43;&#x6f;&#x6e;&#x74;&#x65;&#x6e;&#x74;&#x2d;&#x54;&#x79;&#x70;&#x65;&#x3a;&#x20;&#x61;&#x70;&#x70;&#x6c;&#x69;&#x63;&#x61;&#x74;&#x69;&#x6f;&#x6e;&#x2f;&#x6a;&#x73;&#x6f;&#x6e;&#x27;&#x20;&#x5c;&#x0a;&#x20;&#x20;&#x2d;&#x64;&#x20;&#x27;&#x7b;&#x0a;&#x20;&#x20;&#x22;&#x73;&#x6f;&#x75;&#x72;&#x63;&#x65;&#x22;&#x3a;&#x20;&#x7b;&#x0a;&#x20;&#x20;&#x20;&#x20;&#x22;&#x74;&#x79;&#x70;&#x65;&#x22;&#x3a;&#x20;&#x22;&#x6a;&#x73;&#x6f;&#x6e;&#x22;&#x2c;&#x0a;&#x20;&#x20;&#x20;&#x20;&#x22;&#x69;&#x64;&#x22;&#x3a;&#x20;&#x22;&#x5b;&#x46;&#x49;&#x4c;&#x45;&#x5d;&#x22;&#x0a;&#x20;&#x20;&#x7d;&#x2c;&#x0a;&#x20;&#x20;&#x22;&#x66;&#x65;&#x61;&#x74;&#x75;&#x72;&#x65;&#x2d;&#x6d;&#x61;&#x70;&#x70;&#x69;&#x6e;&#x67;&#x22;&#x3a;&#x20;&#x5b;&#x0a;&#x20;&#x20;&#x20;&#x20;&#x66;&#x31;&#x2c;&#x20;&#x2e;&#x2e;&#x2e;&#x2c;&#x20;&#x66;&#x6e;&#x20;&#x20;&#x5d;&#x0a;&#x7d;&#x27;
           </pre>
         </span>
         <h2>Get the labels</h2>
@@ -976,7 +1216,7 @@ export class IamodelerWidget extends ReactWidget {
           Get the labels of a clustering<br />
           model id is: {model_uuid} <br />
           <pre>
-            &#x63;&#x75;&#x72;&#x6c;&#x20;&#x2d;&#x58;&#x20;&#x27;&#x47;&#x45;&#x54;&#x27;&#x20;&#x5c;&#xa;&#x20;&#x20;&#x27;&#x68;&#x74;&#x74;&#x70;&#x3a;&#x2f;&#x2f;&#x76;&#x6d;&#x2d;&#x62;&#x69;&#x73;&#x69;&#x74;&#x65;&#x2d;&#x35;&#x37;&#x2e;&#x64;&#x65;&#x72;&#x2e;&#x75;&#x73;&#x61;&#x6c;&#x2e;&#x65;&#x73;&#x3a;&#x35;&#x30;&#x30;&#x31;&#x2f;&#x73;&#x6d;&#x61;&#x72;&#x74;&#x63;&#x6c;&#x69;&#x64;&#x65;&#x2f;&#x76;&#x31;&#x2f;&#x69;&#x61;&#x6d;&#x6f;&#x64;&#x65;&#x6c;&#x65;&#x72;&#x2f;&#x75;&#x6e;&#x73;&#x75;&#x70;&#x65;&#x72;&#x76;&#x69;&#x73;&#x65;&#x64;&#x2f;&#x63;&#x6c;&#x75;&#x73;&#x74;&#x65;&#x72;&#x69;&#x6e;&#x67;&#x2f;&#x5b;&#x4d;&#x4f;&#x44;&#x45;&#x4c;&#x5f;&#x49;&#x44;&#x5d;&#x2f;&#x6c;&#x61;&#x62;&#x65;&#x6c;&#x73;&#x27;&#x20;&#x5c;&#xa;&#x20;&#x20;&#x2d;&#x48;&#x20;&#x27;&#x61;&#x63;&#x63;&#x65;&#x70;&#x74;&#x3a;&#x20;&#x61;&#x70;&#x70;&#x6c;&#x69;&#x63;&#x61;&#x74;&#x69;&#x6f;&#x6e;&#x2f;&#x6a;&#x73;&#x6f;&#x6e;&#x27;
+            &#x63;&#x75;&#x72;&#x6c;&#x20;&#x2d;&#x58;&#x20;&#x27;&#x47;&#x45;&#x54;&#x27;&#x20;&#x5c;&#x0a;&#x20;&#x20;&#x27;&#x68;&#x74;&#x74;&#x70;&#x73;&#x3a;&#x2f;&#x2f;&#x5b;&#x53;&#x6d;&#x61;&#x72;&#x74;&#x43;&#x4c;&#x49;&#x44;&#x45;&#x48;&#x4f;&#x53;&#x54;&#x5d;&#x2f;&#x69;&#x61;&#x6d;&#x6f;&#x64;&#x65;&#x6c;&#x65;&#x72;&#x2f;&#x75;&#x6e;&#x73;&#x75;&#x70;&#x65;&#x72;&#x76;&#x69;&#x73;&#x65;&#x64;&#x2f;&#x63;&#x6c;&#x75;&#x73;&#x74;&#x65;&#x72;&#x69;&#x6e;&#x67;&#x2f;&#x5b;&#x4d;&#x4f;&#x44;&#x45;&#x4c;&#x5f;&#x49;&#x44;&#x5d;&#x2f;&#x6c;&#x61;&#x62;&#x65;&#x6c;&#x73;&#x27;&#x20;&#x5c;&#x0a;&#x20;&#x20;&#x2d;&#x48;&#x20;&#x27;&#x61;&#x63;&#x63;&#x65;&#x70;&#x74;&#x3a;&#x20;&#x61;&#x70;&#x70;&#x6c;&#x69;&#x63;&#x61;&#x74;&#x69;&#x6f;&#x6e;&#x2f;&#x6a;&#x73;&#x6f;&#x6e;&#x27;
           </pre>
         </span>
         <h2>predictions</h2>
@@ -984,7 +1224,7 @@ export class IamodelerWidget extends ReactWidget {
           Make predictions using an existing clustering<br />
           model id is: {model_uuid} <br />
           <pre>
-            &#x63;&#x75;&#x72;&#x6c;&#x20;&#x2d;&#x58;&#x20;&#x27;&#x50;&#x4f;&#x53;&#x54;&#x27;&#x20;&#x5c;&#xa;&#x20;&#x20;&#x27;&#x68;&#x74;&#x74;&#x70;&#x3a;&#x2f;&#x2f;&#x76;&#x6d;&#x2d;&#x62;&#x69;&#x73;&#x69;&#x74;&#x65;&#x2d;&#x35;&#x37;&#x2e;&#x64;&#x65;&#x72;&#x2e;&#x75;&#x73;&#x61;&#x6c;&#x2e;&#x65;&#x73;&#x3a;&#x35;&#x30;&#x30;&#x31;&#x2f;&#x73;&#x6d;&#x61;&#x72;&#x74;&#x63;&#x6c;&#x69;&#x64;&#x65;&#x2f;&#x76;&#x31;&#x2f;&#x69;&#x61;&#x6d;&#x6f;&#x64;&#x65;&#x6c;&#x65;&#x72;&#x2f;&#x75;&#x6e;&#x73;&#x75;&#x70;&#x65;&#x72;&#x76;&#x69;&#x73;&#x65;&#x64;&#x2f;&#x63;&#x6c;&#x75;&#x73;&#x74;&#x65;&#x72;&#x69;&#x6e;&#x67;&#x2f;&#x5b;&#x4d;&#x4f;&#x44;&#x45;&#x4c;&#x5f;&#x49;&#x44;&#x5d;&#x2f;&#x70;&#x72;&#x65;&#x64;&#x69;&#x63;&#x74;&#x73;&#x27;&#x20;&#x5c;&#xa;&#x20;&#x20;&#x2d;&#x48;&#x20;&#x27;&#x61;&#x63;&#x63;&#x65;&#x70;&#x74;&#x3a;&#x20;&#x61;&#x70;&#x70;&#x6c;&#x69;&#x63;&#x61;&#x74;&#x69;&#x6f;&#x6e;&#x2f;&#x6a;&#x73;&#x6f;&#x6e;&#x27;
+            &#x63;&#x75;&#x72;&#x6c;&#x20;&#x2d;&#x58;&#x20;&#x27;&#x50;&#x4f;&#x53;&#x54;&#x27;&#x20;&#x5c;&#x0a;&#x20;&#x20;&#x27;&#x68;&#x74;&#x74;&#x70;&#x73;&#x3a;&#x2f;&#x2f;&#x5b;&#x53;&#x6d;&#x61;&#x72;&#x74;&#x43;&#x4c;&#x49;&#x44;&#x45;&#x48;&#x4f;&#x53;&#x54;&#x5d;&#x2f;&#x69;&#x61;&#x6d;&#x6f;&#x64;&#x65;&#x6c;&#x65;&#x72;&#x2f;&#x75;&#x6e;&#x73;&#x75;&#x70;&#x65;&#x72;&#x76;&#x69;&#x73;&#x65;&#x64;&#x2f;&#x63;&#x6c;&#x75;&#x73;&#x74;&#x65;&#x72;&#x69;&#x6e;&#x67;&#x2f;&#x5b;&#x4d;&#x4f;&#x44;&#x45;&#x4c;&#x5f;&#x49;&#x44;&#x5d;&#x2f;&#x70;&#x72;&#x65;&#x64;&#x69;&#x63;&#x74;&#x73;&#x27;&#x20;&#x5c;&#x0a;&#x20;&#x20;&#x2d;&#x48;&#x20;&#x27;&#x61;&#x63;&#x63;&#x65;&#x70;&#x74;&#x3a;&#x20;&#x61;&#x70;&#x70;&#x6c;&#x69;&#x63;&#x61;&#x74;&#x69;&#x6f;&#x6e;&#x2f;&#x6a;&#x73;&#x6f;&#x6e;&#x27;
           </pre>
         </span>
       </div>
@@ -995,7 +1235,8 @@ export class IamodelerWidget extends ReactWidget {
 
   updateInput(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     const key = e.currentTarget.name as keyof typeof IamodelerWidget.state;
-    IamodelerWidget.state[key] = e.currentTarget.value;
+    if (key != 'get_models')
+      IamodelerWidget.state[key] = e.currentTarget.value;
   }
   displayContent(item: string) {
     var items = document.querySelectorAll(".form-widget");
@@ -1030,22 +1271,27 @@ export class IamodelerWidget extends ReactWidget {
     // Declare all variables
     var i, tablinks, j = 0;
     var menuItem = e.target.value;
-    var tab_ids = ["classification", "clustering"]
+    var tab_ids = ["classification", "clustering", "getmodels"]
     // Get all elements with class="tabcontent" and hide them
     if (menuItem == "classification") {
       for (j = 0; j < tab_ids.length; j++) {
         (document.getElementById(tab_ids[j]) as HTMLElement).style.display = "none";
       }
-      (document.getElementById("widget_desc") as HTMLElement).innerHTML = renderToStaticMarkup(DiaplayWidgetDesc("classification", ""));
+      (document.getElementById("widget_desc") as HTMLElement).innerHTML = renderToStaticMarkup(DiaplayWidgetDesc("classification", "", ""));
 
     } else if (menuItem == "clustering") {
       for (j = 0; j < tab_ids.length; j++) {
         (document.getElementById(tab_ids[j]) as HTMLElement).style.display = "none";
       }
-      (document.getElementById("widget_desc") as HTMLElement).innerHTML = renderToStaticMarkup(DiaplayWidgetDesc("clustering", ""));
+      (document.getElementById("widget_desc") as HTMLElement).innerHTML = renderToStaticMarkup(DiaplayWidgetDesc("clustering", "", ""));
+
+    } else if (menuItem == "getmodels") {
+      for (j = 0; j < tab_ids.length; j++) {
+        (document.getElementById(tab_ids[j]) as HTMLElement).style.display = "none";
+      }
+      (document.getElementById("widget_desc") as HTMLElement).innerHTML = renderToStaticMarkup(DiaplayWidgetDesc("getmodels", "", ""));
 
     }
-
     // Get all elements with class="tablinks" and remove the class "active"
     tablinks = document.getElementsByClassName("tablinks");
     for (i = 0; i < tablinks.length; i++) {
@@ -1076,7 +1322,7 @@ export class IamodelerWidget extends ReactWidget {
   getRandomInt(min: number, max: number) {
     min = Math.ceil(min);
     max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min) + min); // The maximum is exclusive and the minimum is inclusive
+    return Math.floor(Math.random() * (max - min) + min);
   }
 
 
