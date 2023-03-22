@@ -132,7 +132,7 @@ function DiaplayWidgetDesc(module: string, id: any, desc: any) {
     return (
 
       <div id="widget_desc">
-        <h2>model id is {id}</h2>
+        <h2>model id is {id} dddddddddddd</h2>
         <p>model description is {desc}</p>
       </div>
     );

@@ -55,14 +55,13 @@ export class IamodelerWidget extends ReactWidget {
     cluster_method: "",
     cluster_target: "",
     cluster_label_number: "",
-    stateKeycloakToken: '',
-    get_models: []
+    stateKeycloakToken: ''
   };
   static model_created = 0;
   model_uuid = '';
   user_creator_id = '';
-  NUMBER_VALIDATOR = /^[0-9]+$/;
-  STRING_VALIDATOR = /^[0-9a-zA-Z_-]{,200}$/;
+  NUMBER_VALIDATOR = /^[0-9.]+$/;
+  STRING_VALIDATOR = /^[0-9a-zA-Z_-]{1,200}$/;
   suppervised_classifiers = ['bayes', 'random-forest', 'gradient-boosting', 'logistic', 'mlp', 'neighbors', 'sv', 'tree']
   suppervised_regressor = ['sv', 'neighbors', 'mlp', 'linear', 'gradient-boosting', 'random-forest', 'extra-trees', 'tree']
 
@@ -150,7 +149,7 @@ export class IamodelerWidget extends ReactWidget {
             value="getmodels"
             onClick={(e) => this.displayMenu(e)}
           >
-            Models List
+            Models List123123
           </button>
         </div>
         <div id="classification" className="tabcontent first">
@@ -313,20 +312,20 @@ export class IamodelerWidget extends ReactWidget {
   }
 
   validator(input: any, str_reg: any) {
-    if (str_reg = 'string') {
+    if (str_reg == 'string') {
       str_reg = this.STRING_VALIDATOR
-    } else if (str_reg = 'number') {
+      if (input && str_reg.test(input)) { return true; }
+    } else if (str_reg == 'number') {
       str_reg = this.NUMBER_VALIDATOR
+      if (input && str_reg.test(input)) { return true; }
     }
-
-    if (input !== '' || !input.match(str_reg)) { return true; }
     return false;
   }
 
   classify() {
 
     //add wait
-    (document.getElementById("waitAnimation") as HTMLElement).style.display = "block";
+    // (document.getElementById("waitAnimation") as HTMLElement).style.display = "block";
     var model_created = 0
 
     var selected = document.querySelectorAll('.after-buttons');
@@ -335,20 +334,22 @@ export class IamodelerWidget extends ReactWidget {
 
     var err_msg = []
     //Input validation
-    if (!this.validator(IamodelerWidget.state["classifier_size"], 'number') || Number(IamodelerWidget.state["classifier_size"]) < 0 || Number(IamodelerWidget.state["classifier_size"]) > 1) {
+    if (Number(IamodelerWidget.state["classifier_size"]) < 0 || Number(IamodelerWidget.state["classifier_size"]) > 1) {
       err_msg.push("Training and Testing: must be float number between 0-1")
     }
     if (IamodelerWidget.state["classifier_name"] === '') {
-      IamodelerWidget.state["classifier_name"] = 'classifer_model_' + this.getRandomInt(1, 100000)
+      // IamodelerWidget.state["classifier_name"] = 'classifer_model_' + this.getRandomInt(1, 100000)
+      err_msg.push("Classifier Name: Model name is required.");
+
     } else if (!this.validator(IamodelerWidget.state["classifier_name"], 'string')) {
-      err_msg.push("Classifier Name: Allowed string characters includes [0-9a-zA-Z_-]  between 0-200")
+      err_msg.push("Classifier Name: Allowed string characters includes [0-9a-zA-Z_-] less than 200 character")
 
     }
     if (IamodelerWidget.state["classifier_name"] !== '' && !this.validator(IamodelerWidget.state["classifier_description"], 'string')) {
-      err_msg.push("Classifier Desc: Allowed string characters includes [0-9a-zA-Z_-]  between 0-200")
+      err_msg.push("Classifier Desc: Allowed string characters includes [0-9a-zA-Z_-] less than 200 character")
     }
     if (IamodelerWidget.state["classifier_target"] === '' || !this.validator(IamodelerWidget.state["classifier_target"], 'string')) {
-      err_msg.push("Classifier Traget: Allowed string characters includes [0-9a-zA-Z_-]  between 2-200")
+      err_msg.push("Classifier Traget: Allowed string characters includes [0-9a-zA-Z_-] less than 200 character")
     }
     //validate method in array
     var accepted_keywords: string[] = this.suppervised_classifiers;
@@ -432,21 +433,20 @@ export class IamodelerWidget extends ReactWidget {
     if (model_created)
       console.log("created?");
 
-    var sotrage_obj = new ModelsStorage()
-    // console.log('sotrage_obj', sotrage_obj)
-    sotrage_obj.model_data_arr.model_id = IamodelerWidget.state["model_id"];
-    sotrage_obj.model_data_arr.model_category = sotrage_obj.CLASSIFIER_CAT;
-    sotrage_obj.model_data_arr.user_creator_id = this.getUserID();
-    sotrage_obj.model_data_arr.model_name = IamodelerWidget.state["classifier_name"];
-    sotrage_obj.model_data_arr.model_description = IamodelerWidget.state["classifier_description"];
-    sotrage_obj.model_data_arr.model_file_uri = IamodelerWidget.state["classifier_file"];
-    sotrage_obj.model_data_arr.model_method = IamodelerWidget.state["classifier_method"];
-    sotrage_obj.model_data_arr.model_target = IamodelerWidget.state["classifier_target"];
-    // sotrage_obj.model_data_arr.model_size = Number(IamodelerWidget.state["classifier_size"]);
-    if (!sotrage_obj.insertMLModel()) {
-      this.messageService.error("Unable to process request please try again.")
-      return false;
-    }
+    // var sotrage_obj = new ModelsStorage()
+    // sotrage_obj.model_data.model_id = IamodelerWidget.state["model_id"];
+    // sotrage_obj.model_data.model_category = sotrage_obj.CLASSIFIER_CAT;
+    // sotrage_obj.model_data.user_creator_id = this.getUserID();
+    // sotrage_obj.model_data.model_name = IamodelerWidget.state["classifier_name"];
+    // sotrage_obj.model_data.model_description = IamodelerWidget.state["classifier_description"];
+    // sotrage_obj.model_data.model_file_uri = IamodelerWidget.state["classifier_file"];
+    // sotrage_obj.model_data.model_method = IamodelerWidget.state["classifier_method"];
+    // sotrage_obj.model_data.model_target = IamodelerWidget.state["classifier_target"];
+    // // sotrage_obj.model_data.model_size = Number(IamodelerWidget.state["classifier_size"]);
+    // if (!sotrage_obj.insertMLModel()) {
+    //   this.messageService.error("Unable to process request please try again.")
+    //   return false;
+    // }
 
     //Delay to creat model on server
     var seconds = 3
@@ -478,7 +478,7 @@ export class IamodelerWidget extends ReactWidget {
       .catch((error: any) => console.log('error', error));
 
     //remove animate
-    (document.getElementById("waitAnimation") as HTMLElement).style.display = "none";
+    // (document.getElementById("waitAnimation") as HTMLElement).style.display = "none";
   }
 
 
@@ -687,20 +687,22 @@ export class IamodelerWidget extends ReactWidget {
 
     var err_msg = []
     //Input validation
-    if (!this.validator(IamodelerWidget.state["regressor_size"], 'number') || Number(IamodelerWidget.state["regressor_size"]) < 0 || Number(IamodelerWidget.state["regressor_size"]) > 1) {
+    if (Number(IamodelerWidget.state["regressor_size"]) < 0 || Number(IamodelerWidget.state["regressor_size"]) > 1) {
       err_msg.push("Training and Testing: must be float number between 0-1")
     }
     if (IamodelerWidget.state["regressor_name"] === '') {
-      IamodelerWidget.state["regressor_name"] = 'regressor_model_' + this.getRandomInt(1, 100000)
-    } else if (!this.validator(IamodelerWidget.state["regressor_name"], 'string')) {
-      err_msg.push("Regressor Name: Allowed string characters includes [0-9a-zA-Z_-]  between 0-200")
+      // IamodelerWidget.state["regressor_name"] = 'regressor_model_' + this.getRandomInt(1, 100000)
+      err_msg.push("Regressor Name: Model name is required.");
+    }
+    if (!this.validator(IamodelerWidget.state["regressor_name"], 'string')) {
+      err_msg.push("Regressor Name: Allowed string characters includes [0-9a-zA-Z_-]  less than 200 character")
 
     }
     if (IamodelerWidget.state["regressor_description"] !== '' && !this.validator(IamodelerWidget.state["regressor_description"], 'string')) {
-      err_msg.push("Regressor Desc: Allowed string characters includes [0-9a-zA-Z_-]  between 2-200")
+      err_msg.push("Regressor Desc: Allowed string characters includes [0-9a-zA-Z_-]  less than 200 character")
     }
     if (IamodelerWidget.state["regressor_target"] === '' || !this.validator(IamodelerWidget.state["regressor_target"], 'string')) {
-      err_msg.push("Regressor Traget: Allowed string characters includes [0-9a-zA-Z_-]  between 2-200")
+      err_msg.push("Regressor Traget: Allowed string characters includes [0-9a-zA-Z_-]  less than 200 character")
     }
     //validate method in array
     var accepted_keywords: string[] = this.suppervised_regressor;
@@ -786,20 +788,20 @@ export class IamodelerWidget extends ReactWidget {
     //   return;
     // }
 
-    var sotrage_obj = new ModelsStorage()
-    sotrage_obj.model_data_arr.model_id = IamodelerWidget.state["model_id"];
-    sotrage_obj.model_data_arr.model_category = sotrage_obj.REGRESSOR_CAT;
-    sotrage_obj.model_data_arr.user_creator_id = this.getUserID();
-    sotrage_obj.model_data_arr.model_name = IamodelerWidget.state["regressor_name"];
-    sotrage_obj.model_data_arr.model_description = IamodelerWidget.state["regressor_description"];
-    sotrage_obj.model_data_arr.model_file_uri = IamodelerWidget.state["regressor_file"];
-    sotrage_obj.model_data_arr.model_method = IamodelerWidget.state["regressor_method"];
-    sotrage_obj.model_data_arr.model_target = IamodelerWidget.state["regressor_target"];
-    // sotrage_obj.model_data.model_size = Number(IamodelerWidget.state["regressor_size"]);
-    if (!sotrage_obj.insertMLModel()) {
-      this.messageService.error("Unable to process request please try again.")
-      return false;
-    }
+    // var sotrage_obj = new ModelsStorage()
+    // sotrage_obj.model_data.model_id = IamodelerWidget.state["model_id"];
+    // sotrage_obj.model_data.model_category = sotrage_obj.REGRESSOR_CAT;
+    // sotrage_obj.model_data.user_creator_id = this.getUserID();
+    // sotrage_obj.model_data.model_name = IamodelerWidget.state["regressor_name"];
+    // sotrage_obj.model_data.model_description = IamodelerWidget.state["regressor_description"];
+    // sotrage_obj.model_data.model_file_uri = IamodelerWidget.state["regressor_file"];
+    // sotrage_obj.model_data.model_method = IamodelerWidget.state["regressor_method"];
+    // sotrage_obj.model_data.model_target = IamodelerWidget.state["regressor_target"];
+    // // sotrage_obj.model_data.model_size = Number(IamodelerWidget.state["regressor_size"]);
+    // if (!sotrage_obj.insertMLModel()) {
+    //   this.messageService.error("Unable to process request please try again.")
+    //   return false;
+    // }
     var evall_url = this.getHostURI() + "/supervised/" + this.model_uuid + "/evaluate";
     fetch(evall_url, {
       method: 'GET',
@@ -825,36 +827,50 @@ export class IamodelerWidget extends ReactWidget {
 
   }
   getmodels() {
-    var sotrage_obj = new ModelsStorage()
-    var get_models: any = sotrage_obj.getMLModels()
-    get_models.then((response: any) => {
-      console.log('state get_modelsget_models: ', response)
-      IamodelerWidget.state["get_models"] = response;
-    })
+    var models = [
+      {
+        id: '846548qw',
+        name: 'iris_classifier',
+        description: 'this is test1',
+        type: 'Classification',
+        method: 'mlp',
+        category: 'classifier',
+        lablenumber: 4
+      },
+      {
+        id: '412586qw',
+        name: 'test 2',
+        description: 'this is test2',
+        type: 'Clusterring',
+        method: 'kmeans',
+        category: 'cluster',
+        lablenumber: 4
+
+      }
+    ]
     return (
       <div id="widget_form">
-        {JSON.stringify(IamodelerWidget.state["get_models"])}
         <div id="result_" className='ia'>
           <table id="models_list">
             <tr>
               <th>Name</th>
-              <th>Category</th>
+              <th>Type</th>
               <th>Method</th>
               <th>Operation</th>
             </tr>
-            {IamodelerWidget.state["get_models"].map((model: any) => (
-              <tr key={model.id}>
+            {models.map((model) => (
+              <tr>
                 <td>
                   {model.name}
                 </td>
                 <td>
-                  {model.category}
+                  {model.type}
                 </td>
                 <td>
                   {model.method}
                 </td>
                 <td>
-                  <a style={{ fontSize: '8px', margin: '0px 2px', color: '#ecf9f2', cursor: 'pointer', padding: '2px' }} onClick={() => this.describeModel(model.id, model.description, 'target', 'category', model.lablenumber)}>View</a>
+                  <a style={{ fontSize: '8px', margin: '0px 2px', color: '#ecf9f2', cursor: 'pointer', padding: '2px' }} onClick={() => this.describeModel(model.id, model.description, model.method, model.category, model.lablenumber)}>View</a>
                   <span style={{ fontSize: '8px', padding: '2px', color: '#ecf900' }} >|</span>
                   <a style={{ fontSize: '8px', margin: '0px 2px', color: '#ecf9f2', cursor: 'pointer', padding: '2px' }} onClick={() => this.downloadModel(model.id)}>Download</a>
                   <span style={{ fontSize: '8px', padding: '2px', color: '#ecf900' }} >|</span>
@@ -866,46 +882,6 @@ export class IamodelerWidget extends ReactWidget {
         </div>
       </div >
     );
-    var sotrage_obj = new ModelsStorage()
-    var get_models: any = sotrage_obj.getMLModels()
-    return get_models.then((response: any) => {
-      console.log('get_modelsget_models: ', response)
-      return (
-        <div id="widget_form">
-          <div id="result_" className='ia'>
-            <table id="models_list">
-              <tr>
-                <th>Name</th>
-                <th>Category</th>
-                <th>Method</th>
-                <th>Operation</th>
-              </tr>
-              {response.map((model: any) => (
-                <tr key={model.id}>
-                  <td>
-                    {model.name}
-                  </td>
-                  <td>
-                    {model.category}
-                  </td>
-                  <td>
-                    {model.method}
-                  </td>
-                  <td>
-                    <a style={{ fontSize: '8px', margin: '0px 2px', color: '#ecf9f2', cursor: 'pointer', padding: '2px' }} onClick={() => this.describeModel(model.id, model.description, 'target', 'category', model.lablenumber)}>View</a>
-                    <span style={{ fontSize: '8px', padding: '2px', color: '#ecf900' }} >|</span>
-                    <a style={{ fontSize: '8px', margin: '0px 2px', color: '#ecf9f2', cursor: 'pointer', padding: '2px' }} onClick={() => this.downloadModel(model.id)}>Download</a>
-                    <span style={{ fontSize: '8px', padding: '2px', color: '#ecf900' }} >|</span>
-                    <a style={{ fontSize: '8px', margin: '0px 2px', color: '#e6b3b3', cursor: 'pointer', padding: '2px' }} onClick={() => this.deleteModel(model.id, model.type)}>Delete</a>
-                  </td>
-                </tr>
-              ))}
-            </table>
-          </div>
-        </div >
-      );
-    })
-    console.log('get_modelsget_modelsget_modelsget_models:', get_models)
   }
 
   describeModel(model_id: string, desc: string, method: string, category: string, lablenumber: number) {
@@ -1032,13 +1008,15 @@ export class IamodelerWidget extends ReactWidget {
     var err_msg = []
     ////Input validation
     if (IamodelerWidget.state["cluster_name"] === '') {
-      IamodelerWidget.state["cluster_name"] = 'cluster_model_' + this.getRandomInt(1, 100000)
-    } else if (!this.validator(IamodelerWidget.state["cluster_name"], 'string')) {
-      err_msg.push("Classifier Name: Allowed string characters includes [0-9a-zA-Z_-]  between 0-200")
+      // IamodelerWidget.state["cluster_name"] = 'cluster_model_' + this.getRandomInt(1, 100000)
+      err_msg.push("Cluster Name: Model name is required.")
+    }
+    if (!this.validator(IamodelerWidget.state["cluster_name"], 'string')) {
+      err_msg.push("Classifier Name: Allowed string characters includes [0-9a-zA-Z_-]  less than 200 character")
     }
 
     if (IamodelerWidget.state["cluster_description"] !== '' && !this.validator(IamodelerWidget.state["cluster_description"], 'string')) {
-      err_msg.push("Classifier Desc: Allowed string characters includes [0-9a-zA-Z_-]  between 0-200")
+      err_msg.push("Classifier Desc: Allowed string characters includes [0-9a-zA-Z_-]  less than 200 character")
     }
 
     var accepted_keywords: string[] = ['kmeans', 'dbscan'];
@@ -1140,18 +1118,18 @@ export class IamodelerWidget extends ReactWidget {
     //   return;
     // }
 
-    var sotrage_obj = new ModelsStorage()
-    sotrage_obj.model_data_arr.model_id = IamodelerWidget.state["model_id"];
-    sotrage_obj.model_data_arr.model_category = sotrage_obj.CLUSTER_CAT;
-    sotrage_obj.model_data_arr.user_creator_id = this.getUserID();
-    sotrage_obj.model_data_arr.model_name = IamodelerWidget.state["cluster_name"];
-    sotrage_obj.model_data_arr.model_description = IamodelerWidget.state["cluster_description"];
-    sotrage_obj.model_data_arr.model_file_uri = IamodelerWidget.state["cluster_file"];
-    sotrage_obj.model_data_arr.model_method = IamodelerWidget.state["cluster_method"];
-    if (!sotrage_obj.insertMLModel()) {
-      this.messageService.error("Unable to process request please try again.")
-      return false;
-    }
+    // var sotrage_obj = new ModelsStorage()
+    // sotrage_obj.model_data.model_id = IamodelerWidget.state["model_id"];
+    // sotrage_obj.model_data.model_category = sotrage_obj.CLUSTER_CAT;
+    // sotrage_obj.model_data.user_creator_id = this.getUserID();
+    // sotrage_obj.model_data.model_name = IamodelerWidget.state["cluster_name"];
+    // sotrage_obj.model_data.model_description = IamodelerWidget.state["cluster_description"];
+    // sotrage_obj.model_data.model_file_uri = IamodelerWidget.state["cluster_file"];
+    // sotrage_obj.model_data.model_method = IamodelerWidget.state["cluster_method"];
+    // if (!sotrage_obj.insertMLModel()) {
+    //   this.messageService.error("Unable to process request please try again.")
+    //   return false;
+    // }
 
     //Get Model info
     var evall_url = this.getHostURI() + "/unsupervised/clustering/" + this.model_uuid + "/labels";
@@ -1235,8 +1213,7 @@ export class IamodelerWidget extends ReactWidget {
 
   updateInput(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     const key = e.currentTarget.name as keyof typeof IamodelerWidget.state;
-    if (key != 'get_models')
-      IamodelerWidget.state[key] = e.currentTarget.value;
+    IamodelerWidget.state[key] = e.currentTarget.value;
   }
   displayContent(item: string) {
     var items = document.querySelectorAll(".form-widget");
