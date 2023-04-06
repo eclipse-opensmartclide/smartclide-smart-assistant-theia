@@ -28,7 +28,7 @@ import DeployedServices from "./deployed_services";
 //validate XML file
 import { XMLValidator } from 'fast-xml-parser';
 // For opening file
-import URI from '@theia/core/lib/common/uri';
+//import URI from '@theia/core/lib/common/uri';
 import { EditorManager } from '@theia/editor/lib/browser';
 import Services from '../browser/data_sample/services.json';
 import { AlertMessage } from "@theia/core/lib/browser/widgets/alert-message";
@@ -410,16 +410,16 @@ export class SmartAssistantWidget extends ReactWidget {
   }
 
   public async creatEditor() {
-    var u = new URI()
-    var filename = await this.helloBackendService.gettemplafile_path()
+    //var u = new URI()
+    //var filename = await this.helloBackendService.gettemplafile_path()
 
-    var new_u = u.withPath(filename);
-    if (new_u) {
-      this.editorManager.open(new_u);
-      this.onScrollYReachEnd
-    } else {
-      console.log(new_u)
-    }
+    //var new_u = u.withPath(filename);
+    //if (new_u) {
+      //this.editorManager.open(new_u);
+      //this.onScrollYReachEnd
+    //} else {
+      //console.log(new_u)
+    //}
   }
 
 
